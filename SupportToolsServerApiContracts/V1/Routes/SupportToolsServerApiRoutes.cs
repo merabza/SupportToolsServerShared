@@ -10,7 +10,7 @@ public static class SupportToolsServerApiRoutes
     {
         public const string GitBase = "/git";
 
-        //// POST api/databases/uploadgitrepos
+        // POST api/git/uploadgitrepos
         public const string UploadGitRepos = "/uploadgitrepos";
 
         ////// POST api/databases/createbackup/{databaseName}
