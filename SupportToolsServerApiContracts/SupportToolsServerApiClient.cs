@@ -23,7 +23,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
     }
 
     //შემოწმდეს არსებული ბაზის მდგომარეობა და საჭიროების შემთხვევაში გამოასწოროს ბაზა
-    public ValueTask<Option<IEnumerable<Err>>> UploadGitRepos(Dictionary<string, GitDataDomain> gits,
+    public ValueTask<Option<IEnumerable<Err>>> UploadGitRepos(SyncGitRequest gits,
         CancellationToken cancellationToken = default)
     {
         var bodyJsonData = JsonConvert.SerializeObject(gits);
