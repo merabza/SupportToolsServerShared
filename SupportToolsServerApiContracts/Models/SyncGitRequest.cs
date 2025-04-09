@@ -2,7 +2,7 @@
 
 namespace SupportToolsServerApiContracts.Models;
 
-public class SyncGitRequest
+public sealed class SyncGitRequest
 {
     public required Dictionary<string, GitDataDomain> Gits { get; set; }
     public required List<GitIgnoreFile> GitIgnoreFiles { get; set; }
