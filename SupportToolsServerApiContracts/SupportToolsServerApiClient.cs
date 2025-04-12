@@ -28,7 +28,8 @@ public sealed class SupportToolsServerApiClient : ApiClient
     {
         var bodyJsonData = JsonConvert.SerializeObject(gits);
 
-        return PostAsync(SupportToolsServerApiRoutes.Git.UploadGitRepos, true, bodyJsonData, cancellationToken);
+        return PostAsync($"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UploadGitRepos}",
+            true, bodyJsonData, cancellationToken);
     }
 
     ////დამზადდეს ბაზის სარეზერვო ასლი სერვერის მხარეს.
