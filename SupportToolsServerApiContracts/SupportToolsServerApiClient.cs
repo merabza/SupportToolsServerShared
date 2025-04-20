@@ -6,6 +6,7 @@ using ApiContracts;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using OneOf;
 using StringMessagesApiContracts;
 using SupportToolsServerApiContracts.Models;
 using SupportToolsServerApiContracts.V1.Routes;
@@ -30,6 +31,13 @@ public sealed class SupportToolsServerApiClient : ApiClient
 
         return PostAsync($"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UploadGitRepos}",
             true, bodyJsonData, cancellationToken);
+    }
+
+    public Task<OneOf<List<GitDataDomain>, IEnumerable<Err>>> GetGitRepos(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<GitDataDomain>>(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GetGitRepos}", false,
+            cancellationToken);
     }
 
     ////დამზადდეს ბაზის სარეზერვო ასლი სერვერის მხარეს.

@@ -13,6 +13,10 @@ public static class SupportToolsServerApiRoutes
         // POST api/git/uploadgitrepos
         public const string UploadGitRepos = "/uploadgitrepos";
 
+        // GET api/git/getgitrepos
+        public const string GetGitRepos = "/getgitrepos";
+
+
 
         //// GET api/databases/getdatabasenames
         //public const string TestGitRepos = "/testgitrepos";
