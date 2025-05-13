@@ -1,4 +1,6 @@
-﻿namespace SupportToolsServerApiContracts.Errors;
+﻿using SystemToolsShared.Errors;
+
+namespace SupportToolsServerApiContracts.Errors;
 
 public static class SupportToolsServerApiClientErrors
 {
@@ -28,4 +30,13 @@ public static class SupportToolsServerApiClientErrors
     //    ErrorCode = nameof(DatabaseServerDataIsNotConfigured),
     //    ErrorMessage = "Database Server Data Is Not Configured"
     //};
+
+
+    public static Err GitWithKeyNotFound(string gitKey) => new()
+    {
+        ErrorCode = nameof(GitWithKeyNotFound),
+        ErrorMessage = $"Git With Key {gitKey} Not Found"
+    };
+
+
 }

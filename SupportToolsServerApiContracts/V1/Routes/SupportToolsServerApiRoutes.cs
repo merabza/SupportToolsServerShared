@@ -16,6 +16,20 @@ public static class SupportToolsServerApiRoutes
         // GET api/git/getgitrepos
         public const string GetGitRepos = "/getgitrepos";
 
+        // GET api/git/getgitrepo
+        public const string GetGitRepo = "/getgitrepo";
+
+        // GET api/git/updategitrepo
+        public const string UpdateGitRepo = "/updategitrepo";
+
+        // GET api/git/deletegitrepo
+        public const string DeleteGitRepo = "/deletegitrepo";
+
+        
+        
+
+        
+
 
 
         //// GET api/databases/getdatabasenames
