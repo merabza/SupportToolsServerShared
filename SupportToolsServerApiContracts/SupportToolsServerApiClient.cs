@@ -36,7 +36,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
     public Task<OneOf<List<GitDataDomain>, IEnumerable<Err>>> GetGitRepos(CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<GitDataDomain>>(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GetGitRepos}", false,
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepos}", false,
             cancellationToken);
     }
 
@@ -72,4 +72,16 @@ public sealed class SupportToolsServerApiClient : ApiClient
     //        $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GetGitIgnoreFilePaths}", false,
     //        cancellationToken);
     //}
+
+    public Task<OneOf<List<string>, IEnumerable<Err>>> GetGitIgnoreFileNames(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<string>>(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileNames}", false,
+            cancellationToken);
+    }
+
+
+
+
+
 }

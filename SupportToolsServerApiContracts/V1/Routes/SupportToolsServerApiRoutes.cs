@@ -13,8 +13,9 @@ public static class SupportToolsServerApiRoutes
         // POST api/git/uploadgitrepos
         public const string UploadGitRepos = "/uploadgitrepos";
 
-        // GET api/git/getgitrepos
-        public const string GetGitRepos = "/getgitrepos";
+
+        // GET api/git/gitrepos
+        public const string GitRepos = "/gitrepos";
 
         // GET api/git/getgitrepo
         public const string GetGitRepo = "/getgitrepo";
@@ -26,8 +27,10 @@ public static class SupportToolsServerApiRoutes
         public const string DeleteGitRepo = "/deletegitrepo";
 
         
+        // GET api/git/gitignorefilenames
+        public const string GitIgnoreFileNames = "/gitignorefilenames";
         
-
+        
         
 
 
