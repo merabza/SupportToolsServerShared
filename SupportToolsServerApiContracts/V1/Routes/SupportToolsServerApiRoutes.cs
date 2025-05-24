@@ -13,9 +13,9 @@ public static class SupportToolsServerApiRoutes
         // POST api/git/uploadgitrepos
         public const string UploadGitRepos = "/uploadgitrepos";
 
-
         // GET api/git/gitrepos
         public const string GitRepos = "/gitrepos";
+       
 
         // GET api/git/getgitrepo
         public const string GetGitRepo = "/getgitrepo";
@@ -25,13 +25,23 @@ public static class SupportToolsServerApiRoutes
 
         // GET api/git/deletegitrepo
         public const string DeleteGitRepo = "/deletegitrepo";
-
         
         // GET api/git/gitignorefilenames
         public const string GitIgnoreFileNames = "/gitignorefilenames";
+
         
         
-        
+        // GET api/git/gitignorefiletypeslist
+        public const string GitIgnoreFileTypesList = "/gitignorefiletypeslist";
+
+        // GET api/git/addgitignorefiletypenameifnotexists
+        public const string AddGitIgnoreFileTypeNameIfNotExists = "/addgitignorefiletypenameifnotexists";
+
+        // GET api/git/deletegitignorefiletype
+        public const string DeletegitIgnoreFileType = "/deletegitignorefiletype";
+
+
+
 
 
 

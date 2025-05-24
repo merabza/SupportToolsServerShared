@@ -1,6 +1,6 @@
 ﻿namespace SupportToolsServerApiContracts.Models;
 
-public sealed class GitDataDomain
+public sealed class GitDataDto
 {
     public required string GitProjectName { get; set; }
     public required string GitProjectAddress { get; set; }

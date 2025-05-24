@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using OneOf;
 using StringMessagesApiContracts;
 using SupportToolsServerApiContracts.Models;
+using SupportToolsServerApiContracts.Requests;
 using SupportToolsServerApiContracts.V1.Routes;
 using SystemToolsShared.Errors;
 
@@ -33,22 +34,30 @@ public sealed class SupportToolsServerApiClient : ApiClient
             true, bodyJsonData, cancellationToken);
     }
 
-    public Task<OneOf<List<GitDataDomain>, IEnumerable<Err>>> GetGitRepos(CancellationToken cancellationToken = default)
+    public Task<OneOf<List<string>, IEnumerable<Err>>> GetGitIgnoreFileTypesList(
+        CancellationToken cancellationToken = default)
     {
-        return GetAsyncReturn<List<GitDataDomain>>(
+        return GetAsyncReturn<List<string>>(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileTypesList}", false,
+            cancellationToken);
+    }
+
+    public Task<OneOf<List<GitDataDto>, IEnumerable<Err>>> GetGitRepos(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<GitDataDto>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepos}", false,
             cancellationToken);
     }
 
-    public Task<OneOf<GitDataDomain, IEnumerable<Err>>> GetGitRepoByKey(string recordKey,
+    public Task<OneOf<GitDataDto, IEnumerable<Err>>> GetGitRepoByKey(string recordKey,
         CancellationToken cancellationToken = default)
     {
-        return GetAsyncReturn<GitDataDomain>(
+        return GetAsyncReturn<GitDataDto>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GetGitRepo}/{recordKey}", false,
             cancellationToken);
     }
 
-    public async Task<Option<IEnumerable<Err>>> UpdateGitRepoByKey(string recordKey, GitDataDomain newRecord,
+    public async Task<Option<IEnumerable<Err>>> UpdateGitRepoByKey(string recordKey, GitDataDto newRecord,
         CancellationToken cancellationToken = default)
     {
         var bodyJsonData = JsonConvert.SerializeObject(newRecord);
@@ -56,6 +65,14 @@ public sealed class SupportToolsServerApiClient : ApiClient
         return await PostAsync(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitRepo}/{recordKey}",
             false, bodyJsonData, cancellationToken);
+    }
+
+    public async Task<Option<IEnumerable<Err>>> AddGitIgnoreFileTypeNameIfNotExists(string gitIgnoreFileTypeName,
+        CancellationToken cancellationToken = default)
+    {
+        return await PostAsync(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.AddGitIgnoreFileTypeNameIfNotExists}/{gitIgnoreFileTypeName}",
+            false, null, cancellationToken);
     }
 
     public async Task<Option<IEnumerable<Err>>> RemoveGitRepoByKey(string recordKey,
@@ -66,6 +83,14 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
+    public async Task<Option<IEnumerable<Err>>> RemoveGitIgnoreFileTypeName(string gitIgnoreFileTypeName,
+        CancellationToken cancellationToken = default)
+    {
+        return await DeleteAsync(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeletegitIgnoreFileType}/{gitIgnoreFileTypeName}",
+            cancellationToken);
+    }
+
     //public Task<OneOf<List<GitIgnoreFilePathDomain>, IEnumerable<Err>>> GetGitIgnoreFilePaths(CancellationToken cancellationToken = default)
     //{
     //    return GetAsyncReturn<List<GitIgnoreFilePathDomain>>(
@@ -73,15 +98,11 @@ public sealed class SupportToolsServerApiClient : ApiClient
     //        cancellationToken);
     //}
 
-    public Task<OneOf<List<string>, IEnumerable<Err>>> GetGitIgnoreFileNames(CancellationToken cancellationToken = default)
+    public Task<OneOf<List<string>, IEnumerable<Err>>> GetGitIgnoreFileNames(
+        CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<string>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileNames}", false,
             cancellationToken);
     }
-
-
-
-
-
 }
