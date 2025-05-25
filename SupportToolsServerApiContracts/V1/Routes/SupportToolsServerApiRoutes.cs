@@ -17,28 +17,28 @@ public static class SupportToolsServerApiRoutes
         public const string GitRepos = "/gitrepos";
        
 
-        // GET api/git/getgitrepo
-        public const string GetGitRepo = "/getgitrepo";
+        // GET api/git/gitrepo
+        public const string GitRepo = "/gitrepo";
 
-        // GET api/git/updategitrepo
+        // POST api/git/updategitrepo
         public const string UpdateGitRepo = "/updategitrepo";
 
-        // GET api/git/deletegitrepo
+        // DELETE api/git/deletegitrepo
         public const string DeleteGitRepo = "/deletegitrepo";
         
-        // GET api/git/gitignorefilenames
-        public const string GitIgnoreFileNames = "/gitignorefilenames";
+        //// GET api/git/gitignorefilenames
+        //public const string GitIgnoreFileNames = "/gitignorefilenames";
 
         
         
         // GET api/git/gitignorefiletypeslist
         public const string GitIgnoreFileTypesList = "/gitignorefiletypeslist";
 
-        // GET api/git/addgitignorefiletypenameifnotexists
+        // POST api/git/addgitignorefiletypenameifnotexists
         public const string AddGitIgnoreFileTypeNameIfNotExists = "/addgitignorefiletypenameifnotexists";
 
-        // GET api/git/deletegitignorefiletype
-        public const string DeletegitIgnoreFileType = "/deletegitignorefiletype";
+        // DELETE api/git/deletegitignorefiletype
+        public const string DeleteGitIgnoreFileType = "/deletegitignorefiletype";
 
 
 

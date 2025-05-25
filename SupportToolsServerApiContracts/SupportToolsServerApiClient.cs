@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using OneOf;
 using StringMessagesApiContracts;
 using SupportToolsServerApiContracts.Models;
-using SupportToolsServerApiContracts.Requests;
+using SupportToolsServerApiContracts.V1.Requests;
 using SupportToolsServerApiContracts.V1.Routes;
 using SystemToolsShared.Errors;
 
@@ -53,7 +53,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
         CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<GitDataDto>(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GetGitRepo}/{recordKey}", false,
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepo}/{recordKey}", false,
             cancellationToken);
     }
 
@@ -87,7 +87,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
         CancellationToken cancellationToken = default)
     {
         return await DeleteAsync(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeletegitIgnoreFileType}/{gitIgnoreFileTypeName}",
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteGitIgnoreFileType}/{gitIgnoreFileTypeName}",
             cancellationToken);
     }
 
@@ -102,7 +102,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
         CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<string>>(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileNames}", false,
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileTypesList}", false,
             cancellationToken);
     }
 }

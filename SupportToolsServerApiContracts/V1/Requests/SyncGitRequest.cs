@@ -1,7 +1,7 @@
-﻿using SupportToolsServerApiContracts.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using SupportToolsServerApiContracts.Models;
 
-namespace SupportToolsServerApiContracts.Requests;
+namespace SupportToolsServerApiContracts.V1.Requests;
 
 public sealed class SyncGitRequest
 {
