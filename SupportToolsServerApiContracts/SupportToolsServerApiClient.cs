@@ -49,21 +49,21 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    public Task<OneOf<GitDataDto, IEnumerable<Err>>> GetGitRepoByKey(string recordKey,
+    public Task<OneOf<GitDataDto, IEnumerable<Err>>> GetGitRepoByKey(string gitKey,
         CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<GitDataDto>(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepo}/{recordKey}", false,
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepo}/{gitKey}", false,
             cancellationToken);
     }
 
-    public async Task<Option<IEnumerable<Err>>> UpdateGitRepoByKey(string recordKey, GitDataDto newRecord,
+    public async Task<Option<IEnumerable<Err>>> UpdateGitRepoByKey(string gitKey, GitDataDto newRecord,
         CancellationToken cancellationToken = default)
     {
         var bodyJsonData = JsonConvert.SerializeObject(newRecord);
 
         return await PostAsync(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitRepo}/{recordKey}",
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitRepo}/{gitKey}",
             false, bodyJsonData, cancellationToken);
     }
 
@@ -75,11 +75,11 @@ public sealed class SupportToolsServerApiClient : ApiClient
             false, null, cancellationToken);
     }
 
-    public async Task<Option<IEnumerable<Err>>> RemoveGitRepoByKey(string recordKey,
+    public async Task<Option<IEnumerable<Err>>> RemoveGitRepoByKey(string gitKey,
         CancellationToken cancellationToken = default)
     {
         return await DeleteAsync(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteGitRepo}/{recordKey}",
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteGitRepo}/{gitKey}",
             cancellationToken);
     }
 

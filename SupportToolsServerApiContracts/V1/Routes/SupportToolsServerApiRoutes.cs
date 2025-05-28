@@ -17,14 +17,14 @@ public static class SupportToolsServerApiRoutes
         public const string GitRepos = "/gitrepos";
        
 
-        // GET api/git/gitrepo
-        public const string GitRepo = "/gitrepo";
+        // GET api/git/gitrepo/{gitKey}
+        public const string GitRepo = "/gitrepo/{gitKey}";
 
-        // POST api/git/updategitrepo
-        public const string UpdateGitRepo = "/updategitrepo";
+        // POST api/git/updategitrepo/{gitKey}
+        public const string UpdateGitRepo = "/updategitrepo/{gitKey}";
 
-        // DELETE api/git/deletegitrepo
-        public const string DeleteGitRepo = "/deletegitrepo";
+        // DELETE api/git/deletegitrepo/{gitKey}
+        public const string DeleteGitRepo = "/deletegitrepo/{gitKey}";
         
         //// GET api/git/gitignorefilenames
         //public const string GitIgnoreFileNames = "/gitignorefilenames";
@@ -34,11 +34,11 @@ public static class SupportToolsServerApiRoutes
         // GET api/git/gitignorefiletypeslist
         public const string GitIgnoreFileTypesList = "/gitignorefiletypeslist";
 
-        // POST api/git/addgitignorefiletypenameifnotexists
-        public const string AddGitIgnoreFileTypeNameIfNotExists = "/addgitignorefiletypenameifnotexists";
+        // POST api/git/addgitignorefiletypenameifnotexists/{gitIgnoreFileTypeName}
+        public const string AddGitIgnoreFileTypeNameIfNotExists = "/addgitignorefiletypenameifnotexists/{gitIgnoreFileTypeName}";
 
-        // DELETE api/git/deletegitignorefiletype
-        public const string DeleteGitIgnoreFileType = "/deletegitignorefiletype";
+        // DELETE api/git/deletegitignorefiletype/{gitIgnoreFileTypeName}
+        public const string DeleteGitIgnoreFileType = "/deletegitignorefiletype/{gitIgnoreFileTypeName}";
 
 
 
