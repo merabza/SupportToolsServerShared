@@ -10,34 +10,34 @@ public static class SupportToolsServerApiRoutes
     {
         public const string GitBase = "/git";
 
-        // POST api/git/uploadgitrepos
+        // POST api/v1/git/uploadgitrepos
         public const string UploadGitRepos = "/uploadgitrepos";
 
-        // GET api/git/gitrepos
+        // GET api/v1/git/gitrepos
         public const string GitRepos = "/gitrepos";
        
 
-        // GET api/git/gitrepo/{gitKey}
+        // GET api/v1/git/gitrepo/{gitKey}
         public const string GitRepo = "/gitrepo/{gitKey}";
 
-        // POST api/git/updategitrepo/{gitKey}
+        // POST api/v1/git/updategitrepo/{gitKey}
         public const string UpdateGitRepo = "/updategitrepo/{gitKey}";
 
-        // DELETE api/git/deletegitrepo/{gitKey}
+        // DELETE api/v1/git/deletegitrepo/{gitKey}
         public const string DeleteGitRepo = "/deletegitrepo/{gitKey}";
         
-        //// GET api/git/gitignorefilenames
+        //// GET api/v1/git/gitignorefilenames
         //public const string GitIgnoreFileNames = "/gitignorefilenames";
 
         
         
-        // GET api/git/gitignorefiletypeslist
+        // GET api/v1/git/gitignorefiletypeslist
         public const string GitIgnoreFileTypesList = "/gitignorefiletypeslist";
 
-        // POST api/git/addgitignorefiletypenameifnotexists/{gitIgnoreFileTypeName}
+        // POST api/v1/git/addgitignorefiletypenameifnotexists/{gitIgnoreFileTypeName}
         public const string AddGitIgnoreFileTypeNameIfNotExists = "/addgitignorefiletypenameifnotexists/{gitIgnoreFileTypeName}";
 
-        // DELETE api/git/deletegitignorefiletype/{gitIgnoreFileTypeName}
+        // DELETE api/v1/git/deletegitignorefiletype/{gitIgnoreFileTypeName}
         public const string DeleteGitIgnoreFileType = "/deletegitignorefiletype/{gitIgnoreFileTypeName}";
 
 
@@ -45,49 +45,49 @@ public static class SupportToolsServerApiRoutes
 
 
 
-        //// GET api/databases/getdatabasenames
+        //// GET api/v1/databases/getdatabasenames
         //public const string TestGitRepos = "/testgitrepos";
 
-        ////// POST api/databases/createbackup/{databaseName}
+        ////// POST api/v1/databases/createbackup/{databaseName}
         //public const string CreateBackupPrefix = "/createbackup";
         //public const string CreateBackup = CreateBackupPrefix + "/{databaseName}/{dbServerFoldersSetName}";
 
-        ////// POST api/databases/executecommand/{databaseName}
+        ////// POST api/v1/databases/executecommand/{databaseName}
         //public const string ExecuteCommandPrefix = "/executecommand";
         //public const string ExecuteCommand = ExecuteCommandPrefix + "/{databaseName?}";
 
-        ////// GET api/databases/getdatabasenames
+        ////// GET api/v1/databases/getdatabasenames
         //public const string GetDatabaseNames = "/getdatabasenames";
 
-        ////// GET api/databases/getdatabasefolderssetnames
+        ////// GET api/v1/databases/getdatabasefolderssetnames
         //public const string GetDatabaseFoldersSetNames = "/getdatabasefolderssetnames";
 
-        ////// GET api/databases/getdatabaseconnectionnames
+        ////// GET api/v1/databases/getdatabaseconnectionnames
         //public const string GetDatabaseConnectionNames = "/getdatabaseconnectionnames";
 
-        ////// GET api/databases/isdatabaseexists/{databaseName}
+        ////// GET api/v1/databases/isdatabaseexists/{databaseName}
         //public const string IsDatabaseExistsPrefix = "/isdatabaseexists";
         //public const string IsDatabaseExists = IsDatabaseExistsPrefix + "/{databaseName}";
 
-        ////// PUT api/databases/restorebackup/{databaseName}
+        ////// PUT api/v1/databases/restorebackup/{databaseName}
         //public const string RestoreBackupPrefix = "/restorebackup";
         //public const string RestoreBackup = RestoreBackupPrefix + "/{databaseName}/{dbServerFoldersSetName}";
 
-        ////// POST api/databases/recompileprocedures/{databaseName}
+        ////// POST api/v1/databases/recompileprocedures/{databaseName}
         //public const string RecompileProceduresPrefix = "/recompileprocedures";
         //public const string RecompileProcedures = RecompileProceduresPrefix + "/{databaseName}";
 
-        ////// POST api/databases/recompileprocedures/{databaseName}
+        ////// POST api/v1/databases/recompileprocedures/{databaseName}
         //public const string ChangeDatabaseRecoveryModelPrefix = "/changedatabaserecoverymodel";
 
         //public const string ChangeDatabaseRecoveryModel =
         //    ChangeDatabaseRecoveryModelPrefix + "/{databaseName}/{databaseRecoveryModel}";
 
-        ////// GET api/databases/testconnection/{databaseName?}
+        ////// GET api/v1/databases/testconnection/{databaseName?}
         //public const string TestConnectionPrefix = "/testconnection";
         //public const string TestConnection = TestConnectionPrefix + "/{databaseName?}";
 
-        ////// POST api/databases/updatestatistics/{databaseName}
+        ////// POST api/v1/databases/updatestatistics/{databaseName}
         //public const string UpdateStatisticsPrefix = "/updatestatistics";
         //public const string UpdateStatistics = UpdateStatisticsPrefix + "/{databaseName}";
     }
