@@ -63,8 +63,8 @@ public sealed class SupportToolsServerApiClient : ApiClient
         var bodyJsonData = JsonConvert.SerializeObject(newRecord);
 
         return await PostAsync(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitRepo}/{gitKey}",
-            false, bodyJsonData, cancellationToken);
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitRepo}/{gitKey}", false,
+            bodyJsonData, cancellationToken);
     }
 
     public async Task<Option<IEnumerable<Err>>> AddGitIgnoreFileTypeNameIfNotExists(string gitIgnoreFileTypeName,

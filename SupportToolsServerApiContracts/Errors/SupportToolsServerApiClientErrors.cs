@@ -31,12 +31,8 @@ public static class SupportToolsServerApiClientErrors
     //    ErrorMessage = "Database Server Data Is Not Configured"
     //};
 
-
-    public static Err GitWithKeyNotFound(string gitKey) => new()
+    public static Err GitWithKeyNotFound(string gitKey)
     {
-        ErrorCode = nameof(GitWithKeyNotFound),
-        ErrorMessage = $"Git With Key {gitKey} Not Found"
-    };
-
-
+        return new Err { ErrorCode = nameof(GitWithKeyNotFound), ErrorMessage = $"Git With Key {gitKey} Not Found" };
+    }
 }
