@@ -25,7 +25,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
     }
 
     //შემოწმდეს არსებული ბაზის მდგომარეობა და საჭიროების შემთხვევაში გამოასწოროს ბაზა
-    public ValueTask<Option<IEnumerable<Err>>> UploadGitRepos(SyncGitRequest gits,
+    public ValueTask<Option<Err[]>> UploadGitRepos(SyncGitRequest gits,
         CancellationToken cancellationToken = default)
     {
         var bodyJsonData = JsonConvert.SerializeObject(gits);
@@ -34,7 +34,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             true, bodyJsonData, cancellationToken);
     }
 
-    public Task<OneOf<List<string>, IEnumerable<Err>>> GetGitIgnoreFileTypesList(
+    public Task<OneOf<List<string>, Err[]>> GetGitIgnoreFileTypesList(
         CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<string>>(
@@ -42,14 +42,14 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    public Task<OneOf<List<GitDataDto>, IEnumerable<Err>>> GetGitRepos(CancellationToken cancellationToken = default)
+    public Task<OneOf<List<GitDataDto>, Err[]>> GetGitRepos(CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<GitDataDto>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepos}", false,
             cancellationToken);
     }
 
-    public Task<OneOf<GitDataDto, IEnumerable<Err>>> GetGitRepoByKey(string gitKey,
+    public Task<OneOf<GitDataDto, Err[]>> GetGitRepoByKey(string gitKey,
         CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<GitDataDto>(
@@ -57,7 +57,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    public async Task<Option<IEnumerable<Err>>> UpdateGitRepoByKey(string gitKey, GitDataDto newRecord,
+    public async Task<Option<Err[]>> UpdateGitRepoByKey(string gitKey, GitDataDto newRecord,
         CancellationToken cancellationToken = default)
     {
         var bodyJsonData = JsonConvert.SerializeObject(newRecord);
@@ -67,7 +67,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             bodyJsonData, cancellationToken);
     }
 
-    public async Task<Option<IEnumerable<Err>>> AddGitIgnoreFileTypeNameIfNotExists(string gitIgnoreFileTypeName,
+    public async Task<Option<Err[]>> AddGitIgnoreFileTypeNameIfNotExists(string gitIgnoreFileTypeName,
         CancellationToken cancellationToken = default)
     {
         return await PostAsync(
@@ -75,7 +75,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             false, null, cancellationToken);
     }
 
-    public async Task<Option<IEnumerable<Err>>> RemoveGitRepoByKey(string gitKey,
+    public async Task<Option<Err[]>> RemoveGitRepoByKey(string gitKey,
         CancellationToken cancellationToken = default)
     {
         return await DeleteAsync(
@@ -83,7 +83,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    public async Task<Option<IEnumerable<Err>>> RemoveGitIgnoreFileTypeName(string gitIgnoreFileTypeName,
+    public async Task<Option<Err[]>> RemoveGitIgnoreFileTypeName(string gitIgnoreFileTypeName,
         CancellationToken cancellationToken = default)
     {
         return await DeleteAsync(
@@ -91,14 +91,14 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    //public Task<OneOf<List<GitIgnoreFilePathDomain>, IEnumerable<Err>>> GetGitIgnoreFilePaths(CancellationToken cancellationToken = default)
+    //public Task<OneOf<List<GitIgnoreFilePathDomain>, Err[]>> GetGitIgnoreFilePaths(CancellationToken cancellationToken = default)
     //{
     //    return GetAsyncReturn<List<GitIgnoreFilePathDomain>>(
     //        $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GetGitIgnoreFilePaths}", false,
     //        cancellationToken);
     //}
 
-    public Task<OneOf<List<string>, IEnumerable<Err>>> GetGitIgnoreFileNames(
+    public Task<OneOf<List<string>, Err[]>> GetGitIgnoreFileNames(
         CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<string>>(
