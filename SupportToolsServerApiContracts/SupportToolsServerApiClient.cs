@@ -42,22 +42,22 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    public Task<OneOf<List<GitDataDto>, Err[]>> GetGitRepos(CancellationToken cancellationToken = default)
+    public Task<OneOf<List<StsGitDataModel>, Err[]>> GetGitRepos(CancellationToken cancellationToken = default)
     {
-        return GetAsyncReturn<List<GitDataDto>>(
+        return GetAsyncReturn<List<StsGitDataModel>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepos}", false,
             cancellationToken);
     }
 
-    public Task<OneOf<GitDataDto, Err[]>> GetGitRepoByKey(string gitKey,
+    public Task<OneOf<StsGitDataModel, Err[]>> GetGitRepoByKey(string gitKey,
         CancellationToken cancellationToken = default)
     {
-        return GetAsyncReturn<GitDataDto>(
+        return GetAsyncReturn<StsGitDataModel>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepo}/{gitKey}", false,
             cancellationToken);
     }
 
-    public async Task<Option<Err[]>> UpdateGitRepoByKey(string gitKey, GitDataDto newRecord,
+    public async Task<Option<Err[]>> UpdateGitRepoByKey(string gitKey, StsGitDataModel newRecord,
         CancellationToken cancellationToken = default)
     {
         var bodyJsonData = JsonConvert.SerializeObject(newRecord);
@@ -67,11 +67,11 @@ public sealed class SupportToolsServerApiClient : ApiClient
             bodyJsonData, cancellationToken);
     }
 
-    public async Task<Option<Err[]>> AddGitIgnoreFileTypeNameIfNotExists(string gitIgnoreFileTypeName,
+    public async Task<Option<Err[]>> UpdateGitIgnoreFileType(string gitIgnoreFileTypeName,
         CancellationToken cancellationToken = default)
     {
         return await PostAsync(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.AddGitIgnoreFileTypeNameIfNotExists}/{gitIgnoreFileTypeName}",
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitIgnoreFileType}/{gitIgnoreFileTypeName}",
             false, null, cancellationToken);
     }
 
