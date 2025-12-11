@@ -25,8 +25,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
     }
 
     //შემოწმდეს არსებული ბაზის მდგომარეობა და საჭიროების შემთხვევაში გამოასწოროს ბაზა
-    public ValueTask<Option<Err[]>> UploadGitRepos(SyncGitRequest gits,
-        CancellationToken cancellationToken = default)
+    public ValueTask<Option<Err[]>> UploadGitRepos(SyncGitRequest gits, CancellationToken cancellationToken = default)
     {
         var bodyJsonData = JsonConvert.SerializeObject(gits);
 
@@ -34,8 +33,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             true, bodyJsonData, cancellationToken);
     }
 
-    public Task<OneOf<List<string>, Err[]>> GetGitIgnoreFileTypesList(
-        CancellationToken cancellationToken = default)
+    public Task<OneOf<List<string>, Err[]>> GetGitIgnoreFileTypesList(CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<string>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileTypesList}", false,
@@ -75,8 +73,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             false, null, cancellationToken);
     }
 
-    public async Task<Option<Err[]>> RemoveGitRepoByKey(string gitKey,
-        CancellationToken cancellationToken = default)
+    public async Task<Option<Err[]>> RemoveGitRepoByKey(string gitKey, CancellationToken cancellationToken = default)
     {
         return await DeleteAsync(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteGitRepo}/{gitKey}",
@@ -98,8 +95,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
     //        cancellationToken);
     //}
 
-    public Task<OneOf<List<string>, Err[]>> GetGitIgnoreFileNames(
-        CancellationToken cancellationToken = default)
+    public Task<OneOf<List<string>, Err[]>> GetGitIgnoreFileNames(CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<string>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileTypesList}", false,
