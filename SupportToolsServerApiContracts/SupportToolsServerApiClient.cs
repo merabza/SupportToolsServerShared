@@ -33,9 +33,9 @@ public sealed class SupportToolsServerApiClient : ApiClient
             true, bodyJsonData, cancellationToken);
     }
 
-    public Task<OneOf<List<string>, Err[]>> GetGitIgnoreFileTypesList(CancellationToken cancellationToken = default)
+    public Task<OneOf<List<StsGitIgnoreFileTypeDataModel>, Err[]>> GetGitIgnoreFileTypesList(CancellationToken cancellationToken = default)
     {
-        return GetAsyncReturn<List<string>>(
+        return GetAsyncReturn<List<StsGitIgnoreFileTypeDataModel>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileTypesList}", false,
             cancellationToken);
     }
