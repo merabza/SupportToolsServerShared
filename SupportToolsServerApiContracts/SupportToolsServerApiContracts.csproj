@@ -9,6 +9,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\SystemTools\ApiContracts\ApiContracts.csproj" />
     <ProjectReference Include="..\..\SystemTools\StringMessagesApiContracts\StringMessagesApiContracts.csproj" />
+    <ProjectReference Include="..\..\SystemTools\SystemTools.ApiContracts\SystemTools.ApiContracts.csproj" />
+    <ProjectReference Include="..\..\SystemTools\SystemTools.StringMessagesApiContracts\SystemTools.StringMessagesApiContracts.csproj" />
+    <ProjectReference Include="..\..\SystemTools\SystemTools.SystemToolsShared\SystemTools.SystemToolsShared.csproj" />
     <ProjectReference Include="..\..\SystemTools\SystemToolsShared\SystemToolsShared.csproj" />
   </ItemGroup>
 

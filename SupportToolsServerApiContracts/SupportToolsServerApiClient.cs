@@ -2,16 +2,16 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using ApiContracts;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OneOf;
-using StringMessagesApiContracts;
 using SupportToolsServerApiContracts.Models;
 using SupportToolsServerApiContracts.V1.Requests;
 using SupportToolsServerApiContracts.V1.Routes;
-using SystemToolsShared.Errors;
+using SystemTools.ApiContracts;
+using SystemTools.StringMessagesApiContracts;
+using SystemTools.SystemToolsShared.Errors;
 
 namespace SupportToolsServerApiContracts;
 
@@ -33,7 +33,8 @@ public sealed class SupportToolsServerApiClient : ApiClient
             true, bodyJsonData, cancellationToken);
     }
 
-    public Task<OneOf<List<StsGitIgnoreFileTypeDataModel>, Err[]>> GetGitIgnoreFileTypesList(CancellationToken cancellationToken = default)
+    public Task<OneOf<List<StsGitIgnoreFileTypeDataModel>, Err[]>> GetGitIgnoreFileTypesList(
+        CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<StsGitIgnoreFileTypeDataModel>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileTypesList}", false,
