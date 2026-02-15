@@ -39,7 +39,6 @@ public static class SupportToolsServerApiRoutes
 
         //// POST api/v1/git/mergeupgitignorefiletypes
         //public const string MergeUpGitIgnoreFileTypes = "/mergeupgitignorefiletypes";
-        
 
         // DELETE api/v1/git/deletegitignorefiletype/{key}
         public const string DeleteGitIgnoreFileType = "/deletegitignorefiletype/{key}";
