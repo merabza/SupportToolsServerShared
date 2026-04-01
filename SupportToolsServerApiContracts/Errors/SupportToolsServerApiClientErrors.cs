@@ -4,35 +4,35 @@ namespace SupportToolsServerApiContracts.Errors;
 
 public static class SupportToolsServerApiClientErrors
 {
-    //public static readonly Err DatabasesBackupFilesExchangeParametersIsNotConfigured = new()
+    //public static readonly Error DatabasesBackupFilesExchangeParametersIsNotConfigured = new()
     //{
-    //    ErrorCode = nameof(DatabasesBackupFilesExchangeParametersIsNotConfigured),
-    //    ErrorMessage = "Databases Backup Files Exchange Parameters Is Not Configured"
+    //    Code = nameof(DatabasesBackupFilesExchangeParametersIsNotConfigured),
+    //    Name = "Databases Backup Files Exchange Parameters Is Not Configured"
     //};
 
-    //public static readonly Err BaseBackupParametersIsNotCreated = new()
+    //public static readonly Error BaseBackupParametersIsNotCreated = new()
     //{
-    //    ErrorCode = nameof(BaseBackupParametersIsNotCreated), ErrorMessage = "Base Backup Parameters Is Not Created"
+    //    Code = nameof(BaseBackupParametersIsNotCreated), Name = "Base Backup Parameters Is Not Created"
     //};
 
-    //public static readonly Err BackupFileParametersIsNull = new()
+    //public static readonly Error BackupFileParametersIsNull = new()
     //{
-    //    ErrorCode = nameof(BackupFileParametersIsNull), ErrorMessage = "BackupFileParameters Is Null"
+    //    Code = nameof(BackupFileParametersIsNull), Name = "BackupFileParameters Is Null"
     //};
 
-    //public static readonly Err ErrorWhenRestoreDatabase = new()
+    //public static readonly Error ErrorWhenRestoreDatabase = new()
     //{
-    //    ErrorCode = nameof(ErrorWhenRestoreDatabase), ErrorMessage = "Error When Restore Database"
+    //    Code = nameof(ErrorWhenRestoreDatabase), Name = "Error When Restore Database"
     //};
 
-    //public static readonly Err DatabaseServerDataIsNotConfigured = new()
+    //public static readonly Error DatabaseServerDataIsNotConfigured = new()
     //{
-    //    ErrorCode = nameof(DatabaseServerDataIsNotConfigured),
-    //    ErrorMessage = "Database Server Data Is Not Configured"
+    //    Code = nameof(DatabaseServerDataIsNotConfigured),
+    //    Name = "Database Server Data Is Not Configured"
     //};
 
-    public static Err GitWithKeyNotFound(string gitKey)
+    public static Error GitWithKeyNotFound(string gitKey)
     {
-        return new Err { ErrorCode = nameof(GitWithKeyNotFound), ErrorMessage = $"Git With Key {gitKey} Not Found" };
+        return new Error { Code = nameof(GitWithKeyNotFound), Name = $"Git With Key {gitKey} Not Found" };
     }
 }
