@@ -1,38 +1,27 @@
-﻿using SystemTools.SystemToolsShared.Errors;
+﻿using SystemTools.SharedKernel;
 
 namespace SupportToolsServerApiContracts.Errors;
 
 public static class SupportToolsServerApiClientErrors
 {
-    //public static readonly ErrorOmd DatabasesBackupFilesExchangeParametersIsNotConfigured = new()
-    //{
-    //    Code = nameof(DatabasesBackupFilesExchangeParametersIsNotConfigured),
-    //    Name = "Databases Backup Files Exchange Parameters Is Not Configured"
-    //};
+    //public static readonly Error DatabasesBackupFilesExchangeParametersIsNotConfigured =
+    //    Error.Problem(nameof(DatabasesBackupFilesExchangeParametersIsNotConfigured),
+    //        "Databases Backup Files Exchange Parameters Is Not Configured");
 
-    //public static readonly ErrorOmd BaseBackupParametersIsNotCreated = new()
-    //{
-    //    Code = nameof(BaseBackupParametersIsNotCreated), Name = "Base Backup Parameters Is Not Created"
-    //};
+    //public static readonly Error BaseBackupParametersIsNotCreated =
+    //    Error.Problem(nameof(BaseBackupParametersIsNotCreated), "Base Backup Parameters Is Not Created");
 
-    //public static readonly ErrorOmd BackupFileParametersIsNull = new()
-    //{
-    //    Code = nameof(BackupFileParametersIsNull), Name = "BackupFileParameters Is Null"
-    //};
+    //public static readonly Error BackupFileParametersIsNull =
+    //    Error.Problem(nameof(BackupFileParametersIsNull), "BackupFileParameters Is Null");
 
-    //public static readonly ErrorOmd ErrorWhenRestoreDatabase = new()
-    //{
-    //    Code = nameof(ErrorWhenRestoreDatabase), Name = "ErrorOmd When Restore Database"
-    //};
+    //public static readonly Error ErrorWhenRestoreDatabase =
+    //    Error.Problem(nameof(ErrorWhenRestoreDatabase), "Error When Restore Database");
 
-    //public static readonly ErrorOmd DatabaseServerDataIsNotConfigured = new()
-    //{
-    //    Code = nameof(DatabaseServerDataIsNotConfigured),
-    //    Name = "Database Server Data Is Not Configured"
-    //};
+    //public static readonly Error DatabaseServerDataIsNotConfigured =
+    //    Error.Problem(nameof(DatabaseServerDataIsNotConfigured), "Database Server Data Is Not Configured");
 
-    public static ErrorOmd GitWithKeyNotFound(string gitKey)
+    public static Error GitWithKeyNotFound(string gitKey)
     {
-        return new ErrorOmd { Code = nameof(GitWithKeyNotFound), Name = $"Git With Key {gitKey} Not Found" };
+        return Error.NotFound(nameof(GitWithKeyNotFound), $"Git With Key {gitKey} Not Found");
     }
 }

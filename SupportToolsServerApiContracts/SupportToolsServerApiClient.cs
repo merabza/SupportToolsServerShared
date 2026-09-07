@@ -2,16 +2,14 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using OneOf;
 using SupportToolsServerApiContracts.Models;
 using SupportToolsServerApiContracts.V1.Requests;
 using SupportToolsServerApiContracts.V1.Routes;
 using SystemTools.ApiContracts;
+using SystemTools.SharedKernel;
 using SystemTools.StringMessagesApiContracts;
-using SystemTools.SystemToolsShared.Errors;
 
 namespace SupportToolsServerApiContracts;
 
@@ -25,8 +23,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
     }
 
     //შემოწმდეს არსებული ბაზის მდგომარეობა და საჭიროების შემთხვევაში გამოასწოროს ბაზა
-    public ValueTask<Option<ErrorOmd[]>> UploadGitRepos(SyncGitRequest gits,
-        CancellationToken cancellationToken = default)
+    public ValueTask<Result> UploadGitRepos(SyncGitRequest gits, CancellationToken cancellationToken = default)
     {
         var bodyJsonData = JsonConvert.SerializeObject(gits);
 
@@ -34,7 +31,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             true, bodyJsonData, cancellationToken);
     }
 
-    public Task<OneOf<List<StsGitIgnoreFileTypeDataModel>, ErrorOmd[]>> GetGitIgnoreFileTypesList(
+    public Task<Result<List<StsGitIgnoreFileTypeDataModel>>> GetGitIgnoreFileTypesList(
         CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<StsGitIgnoreFileTypeDataModel>>(
@@ -42,22 +39,21 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    public Task<OneOf<List<StsGitDataModel>, ErrorOmd[]>> GetGitRepos(CancellationToken cancellationToken = default)
+    public Task<Result<List<StsGitDataModel>>> GetGitRepos(CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<StsGitDataModel>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepos}", false,
             cancellationToken);
     }
 
-    public Task<OneOf<StsGitDataModel, ErrorOmd[]>> GetGitRepoByKey(string gitKey,
-        CancellationToken cancellationToken = default)
+    public Task<Result<StsGitDataModel>> GetGitRepoByKey(string gitKey, CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<StsGitDataModel>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepo}/{gitKey}", false,
             cancellationToken);
     }
 
-    public async Task<Option<ErrorOmd[]>> UpdateGitRepoByKey(string gitKey, StsGitDataModel newRecord,
+    public async Task<Result> UpdateGitRepoByKey(string gitKey, StsGitDataModel newRecord,
         CancellationToken cancellationToken = default)
     {
         var bodyJsonData = JsonConvert.SerializeObject(newRecord);
@@ -67,7 +63,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             bodyJsonData, cancellationToken);
     }
 
-    public async Task<Option<ErrorOmd[]>> UpdateGitIgnoreFileType(string gitIgnoreFileTypeName,
+    public async Task<Result> UpdateGitIgnoreFileType(string gitIgnoreFileTypeName,
         CancellationToken cancellationToken = default)
     {
         return await PostAsync(
@@ -75,15 +71,14 @@ public sealed class SupportToolsServerApiClient : ApiClient
             false, null, cancellationToken);
     }
 
-    public async Task<Option<ErrorOmd[]>> RemoveGitRepoByKey(string gitKey,
-        CancellationToken cancellationToken = default)
+    public async Task<Result> RemoveGitRepoByKey(string gitKey, CancellationToken cancellationToken = default)
     {
         return await DeleteAsync(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteGitRepo}/{gitKey}",
             cancellationToken);
     }
 
-    public async Task<Option<ErrorOmd[]>> RemoveGitIgnoreFileTypeName(string gitIgnoreFileTypeName,
+    public async Task<Result> RemoveGitIgnoreFileTypeName(string gitIgnoreFileTypeName,
         CancellationToken cancellationToken = default)
     {
         return await DeleteAsync(
@@ -91,14 +86,14 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    //public Task<OneOf<List<GitIgnoreFilePathDomain>, ErrorOmd[]>> GetGitIgnoreFilePaths(CancellationToken cancellationToken = default)
+    //public Task<Result<List<GitIgnoreFilePathDomain>>> GetGitIgnoreFilePaths(CancellationToken cancellationToken = default)
     //{
     //    return GetAsyncReturn<List<GitIgnoreFilePathDomain>>(
     //        $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GetGitIgnoreFilePaths}", false,
     //        cancellationToken);
     //}
 
-    public Task<OneOf<List<string>, ErrorOmd[]>> GetGitIgnoreFileNames(CancellationToken cancellationToken = default)
+    public Task<Result<List<string>>> GetGitIgnoreFileNames(CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<string>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileTypesList}", false,
