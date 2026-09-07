@@ -86,13 +86,6 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    //public Task<Result<List<GitIgnoreFilePathDomain>>> GetGitIgnoreFilePaths(CancellationToken cancellationToken = default)
-    //{
-    //    return GetAsyncReturn<List<GitIgnoreFilePathDomain>>(
-    //        $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GetGitIgnoreFilePaths}", false,
-    //        cancellationToken);
-    //}
-
     public Task<Result<List<string>>> GetGitIgnoreFileNames(CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<string>>(
