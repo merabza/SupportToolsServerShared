@@ -17,13 +17,16 @@ public static class SupportToolsServerApiRoutes
         public const string GitRepos = "/gitrepos";
 
         // GET api/v1/git/gitrepo/{key}
-        public const string GitRepo = "/gitrepo/{key}";
+        public const string GitRepoPrefix = "/gitrepo";
+        public const string GitRepo = GitRepoPrefix + "/{key}";
 
-        // POST api/v1/git/updategitrepo
-        public const string UpdateGitRepo = "/updategitrepo";
+        // POST api/v1/git/updategitrepo/{key}
+        public const string UpdateGitRepoPrefix = "/updategitrepo";
+        public const string UpdateGitRepo = UpdateGitRepoPrefix + "/{key}";
 
         // DELETE api/v1/git/deletegitrepo/{key}
-        public const string DeleteGitRepo = "/deletegitrepo/{key}";
+        public const string DeleteGitRepoPrefix = "/deletegitrepo";
+        public const string DeleteGitRepo = DeleteGitRepoPrefix + "/{key}";
 
         //// GET api/v1/git/gitignorefilenames
         //public const string GitIgnoreFileNames = "/gitignorefilenames";
@@ -31,8 +34,9 @@ public static class SupportToolsServerApiRoutes
         // GET api/v1/git/gitignorefiletypeslist
         public const string GitIgnoreFileTypesList = "/gitignorefiletypeslist";
 
-        // POST api/v1/git/updategitignorefiletype
-        public const string UpdateGitIgnoreFileType = "/updategitignorefiletype";
+        // POST api/v1/git/updategitignorefiletype/{key}
+        public const string UpdateGitIgnoreFileTypePrefix = "/updategitignorefiletype";
+        public const string UpdateGitIgnoreFileType = UpdateGitIgnoreFileTypePrefix + "/{key}";
 
         // POST api/v1/git/syncupgitignorefiletypes/{merge?}
         public const string SyncUpGitIgnoreFileTypesPrefix = "/syncupgitignorefiletypes";
@@ -42,7 +46,8 @@ public static class SupportToolsServerApiRoutes
         //public const string MergeUpGitIgnoreFileTypes = "/mergeupgitignorefiletypes";
 
         // DELETE api/v1/git/deletegitignorefiletype/{key}
-        public const string DeleteGitIgnoreFileType = "/deletegitignorefiletype/{key}";
+        public const string DeleteGitIgnoreFileTypePrefix = "/deletegitignorefiletype";
+        public const string DeleteGitIgnoreFileType = DeleteGitIgnoreFileTypePrefix + "/{key}";
 
         //// GET api/v1/databases/getdatabasenames
         //public const string TestGitRepos = "/testgitrepos";

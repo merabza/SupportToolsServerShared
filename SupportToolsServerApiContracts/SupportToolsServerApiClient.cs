@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,8 +61,8 @@ public sealed class SupportToolsServerApiClient : ApiClient
     public Task<Result<StsGitDataModel>> GetGitRepoByKey(string gitKey, CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<StsGitDataModel>(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepo}/{gitKey}", false,
-            cancellationToken);
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepoPrefix}/{Uri.EscapeDataString(gitKey)}",
+            false, cancellationToken);
     }
 
     public async Task<Result> UpdateGitRepoByKey(string gitKey, StsGitDataModel newRecord,
@@ -70,22 +71,22 @@ public sealed class SupportToolsServerApiClient : ApiClient
         var bodyJsonData = JsonConvert.SerializeObject(newRecord);
 
         return await PostAsync(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitRepo}/{gitKey}", false,
-            bodyJsonData, cancellationToken);
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitRepoPrefix}/{Uri.EscapeDataString(gitKey)}",
+            false, bodyJsonData, cancellationToken);
     }
 
     public async Task<Result> UpdateGitIgnoreFileType(string gitIgnoreFileTypeName,
         CancellationToken cancellationToken = default)
     {
         return await PostAsync(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitIgnoreFileType}/{gitIgnoreFileTypeName}",
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.UpdateGitIgnoreFileTypePrefix}/{Uri.EscapeDataString(gitIgnoreFileTypeName)}",
             false, null, cancellationToken);
     }
 
     public async Task<Result> RemoveGitRepoByKey(string gitKey, CancellationToken cancellationToken = default)
     {
         return await DeleteAsync(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteGitRepo}/{gitKey}",
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteGitRepoPrefix}/{Uri.EscapeDataString(gitKey)}",
             cancellationToken);
     }
 
@@ -93,7 +94,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
         CancellationToken cancellationToken = default)
     {
         return await DeleteAsync(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteGitIgnoreFileType}/{gitIgnoreFileTypeName}",
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteGitIgnoreFileTypePrefix}/{Uri.EscapeDataString(gitIgnoreFileTypeName)}",
             cancellationToken);
     }
 
