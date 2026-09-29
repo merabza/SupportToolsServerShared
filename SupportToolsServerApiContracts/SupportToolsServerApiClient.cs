@@ -43,6 +43,17 @@ public sealed class SupportToolsServerApiClient : ApiClient
             false, bodyJsonData, cancellationToken);
     }
 
+    //merge=false-ის დროს სერვერზე წაიშლება ის ჩანაწერები, რომლებიც ატვირთულ სიაში არ არის
+    public ValueTask<Result> SyncUpEditorConfigFileTypes(List<StsEditorConfigFileTypeDataModel> editorConfigFileTypes,
+        bool merge, CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(editorConfigFileTypes);
+
+        return PostAsync(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.SyncUpEditorConfigFileTypesPrefix}/{merge}",
+            false, bodyJsonData, cancellationToken);
+    }
+
     public Task<Result<List<StsGitIgnoreFileTypeDataModel>>> GetGitIgnoreFileTypesList(
         CancellationToken cancellationToken = default)
     {

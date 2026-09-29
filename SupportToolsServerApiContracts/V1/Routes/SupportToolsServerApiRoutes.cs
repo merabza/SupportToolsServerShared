@@ -49,6 +49,10 @@ public static class SupportToolsServerApiRoutes
         public const string DeleteGitIgnoreFileTypePrefix = "/deletegitignorefiletype";
         public const string DeleteGitIgnoreFileType = DeleteGitIgnoreFileTypePrefix + "/{key}";
 
+        // POST api/v1/git/syncupeditorconfigfiletypes/{merge?}
+        public const string SyncUpEditorConfigFileTypesPrefix = "/syncupeditorconfigfiletypes";
+        public const string SyncUpEditorConfigFileTypes = SyncUpEditorConfigFileTypesPrefix + "/{merge?}";
+
         //// GET api/v1/databases/getdatabasenames
         //public const string TestGitRepos = "/testgitrepos";
 

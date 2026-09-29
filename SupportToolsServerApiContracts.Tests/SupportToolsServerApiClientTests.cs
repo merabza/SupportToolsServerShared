@@ -118,6 +118,41 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("CSharp", Assert.Single(sent).Name);
     }
 
+    [Theory]
+    [InlineData(false, "/api/v1/git/syncupeditorconfigfiletypes/False")]
+    [InlineData(true, "/api/v1/git/syncupeditorconfigfiletypes/True")]
+    public async Task SyncUpEditorConfigFileTypes_PostsTheListWithTheMergeFlagInTheRoute(bool merge, string path)
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+        List<StsEditorConfigFileTypeDataModel> list = [new() { Name = "default", Content = "root = true" }];
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).SyncUpEditorConfigFileTypes(list, merge));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal(path, handler.LastRequestUri!.AbsolutePath);
+        StsEditorConfigFileTypeDataModel sent = Assert.Single(
+            JsonConvert.DeserializeObject<List<StsEditorConfigFileTypeDataModel>>(handler.LastRequestBody!)!);
+        Assert.Equal("default", sent.Name);
+        Assert.Equal("root = true", sent.Content);
+    }
+
+    [Fact]
+    public async Task SyncUpEditorConfigFileTypes_ReturnsTheServerError()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.BadRequest,
+            """{"title":"ValueTooLong","status":400,"detail":"default.Content Is Longer Than 65536 Characters"}""",
+            "application/problem+json");
+
+        (Result result, _) = await CaptureConsole(async () =>
+            await CreateClient(handler).SyncUpEditorConfigFileTypes([], false));
+
+        Assert.Equal("ValueTooLong", result.Error.Code);
+        Assert.Equal("default.Content Is Longer Than 65536 Characters", result.Error.Description);
+    }
+
     [Fact]
     public async Task GetGitIgnoreFileTypesList_GetsTheListWithoutTheMessageHub()
     {
