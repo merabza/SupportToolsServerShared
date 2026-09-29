@@ -1,0 +1,15 @@
+<Solution>
+    <Folder Name="/Solution Items/">
+        <File Path="Directory.Packages.props" />
+    </Folder>
+    <Folder Name="/SystemTools/">
+        <Project Path="../SystemTools/SystemTools.ApiContracts/SystemTools.ApiContracts.csproj" />
+        <Project Path="../SystemTools/SystemTools.SharedKernel/SystemTools.SharedKernel.csproj" />
+        <Project Path="../SystemTools/SystemTools.StringMessagesApiContracts/SystemTools.StringMessagesApiContracts.csproj" />
+        <Project Path="../SystemTools/SystemTools.SystemToolsShared/SystemTools.SystemToolsShared.csproj" />
+    </Folder>
+    <Folder Name="/Tests/">
+        <Project Path="SupportToolsServerApiContracts.Tests/SupportToolsServerApiContracts.Tests.csproj" />
+    </Folder>
+    <Project Path="SupportToolsServerApiContracts/SupportToolsServerApiContracts.csproj" />
+</Solution>
