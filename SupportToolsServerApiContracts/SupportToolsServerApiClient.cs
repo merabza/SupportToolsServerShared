@@ -62,6 +62,14 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
+    public Task<Result<List<StsEditorConfigFileTypeDataModel>>> GetEditorConfigFileTypesList(
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsEditorConfigFileTypeDataModel>>(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.EditorConfigFileTypesList}",
+            false, cancellationToken);
+    }
+
     public Task<Result<List<StsGitDataModel>>> GetGitRepos(CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<StsGitDataModel>>(

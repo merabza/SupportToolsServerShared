@@ -170,6 +170,23 @@ public sealed class SupportToolsServerApiClientTests
     }
 
     [Fact]
+    public async Task GetEditorConfigFileTypesList_GetsTheListWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"Name":"CSharp","Content":"root = true"}]""");
+
+        (Result<List<StsEditorConfigFileTypeDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetEditorConfigFileTypesList());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/git/editorconfigfiletypeslist", handler.LastRequestUri!.AbsolutePath);
+        StsEditorConfigFileTypeDataModel editorConfigFileType = Assert.Single(result.Value);
+        Assert.Equal("CSharp", editorConfigFileType.Name);
+        Assert.Equal("root = true", editorConfigFileType.Content);
+    }
+
+    [Fact]
     public async Task GetGitRepos_GetsTheListWithoutTheMessageHub()
     {
         using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, $"[{GitRepoJson}]");
