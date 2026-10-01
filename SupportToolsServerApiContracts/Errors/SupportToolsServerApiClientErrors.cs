@@ -25,6 +25,12 @@ public static class SupportToolsServerApiClientErrors
         return Error.Conflict(nameof(GitAddressIsInUse), $"Git Address {gitAddress} Is Used By {gitNames}");
     }
 
+    public static Error EditorConfigFileTypeWithNameNotFound(string editorConfigFileTypeName)
+    {
+        return Error.NotFound(nameof(EditorConfigFileTypeWithNameNotFound),
+            $"EditorConfig File Type With Name {editorConfigFileTypeName} Not Found");
+    }
+
     public static Error ValueRequired(string valueName)
     {
         return Error.Problem(nameof(ValueRequired), $"{valueName} Is Required");

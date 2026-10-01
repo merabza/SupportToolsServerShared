@@ -300,6 +300,33 @@ public sealed class SupportToolsServerApiClientTests
     }
 
     [Fact]
+    public async Task RemoveEditorConfigFileTypeName_DeletesTheEscapedNameAndStartsTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).RemoveEditorConfigFileTypeName("Ba Getter"));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/git/deleteeditorconfigfiletype/Ba%20Getter", handler.LastRequestUri!.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task RemoveEditorConfigFileTypeName_ReturnsTheServerError()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.NotFound,
+            """{"title":"EditorConfigFileTypeWithNameNotFound","status":404,"detail":"EditorConfig File Type With Name React Not Found"}""",
+            "application/problem+json");
+
+        (Result result, _) =
+            await CaptureConsole(async () => await CreateClient(handler).RemoveEditorConfigFileTypeName("React"));
+
+        Assert.Equal("EditorConfigFileTypeWithNameNotFound", result.Error.Code);
+    }
+
+    [Fact]
     public async Task GetGitIgnoreFileNames_GetsTheListRouteWithoutTheMessageHub()
     {
         using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, """["CSharp","React"]""");

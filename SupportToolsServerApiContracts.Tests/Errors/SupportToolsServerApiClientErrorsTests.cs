@@ -47,6 +47,16 @@ public sealed class SupportToolsServerApiClientErrorsTests
     }
 
     [Fact]
+    public void EditorConfigFileTypeWithNameNotFound_IsANotFoundErrorNamingTheType()
+    {
+        Error error = SupportToolsServerApiClientErrors.EditorConfigFileTypeWithNameNotFound("BaGetter");
+
+        Assert.Equal("EditorConfigFileTypeWithNameNotFound", error.Code);
+        Assert.Equal("EditorConfig File Type With Name BaGetter Not Found", error.Description);
+        Assert.Equal(ErrorType.NotFound, error.Type);
+    }
+
+    [Fact]
     public void ValueRequired_IsAProblemNamingTheValue()
     {
         Error error = SupportToolsServerApiClientErrors.ValueRequired("RepoA.GitProjectAddress");
