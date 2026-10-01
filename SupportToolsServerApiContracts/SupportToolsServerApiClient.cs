@@ -117,6 +117,14 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
+    public async Task<Result> RemoveEditorConfigFileTypeName(string editorConfigFileTypeName,
+        CancellationToken cancellationToken = default)
+    {
+        return await DeleteAsync(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteEditorConfigFileTypePrefix}/{Uri.EscapeDataString(editorConfigFileTypeName)}",
+            cancellationToken);
+    }
+
     public Task<Result<List<string>>> GetGitIgnoreFileNames(CancellationToken cancellationToken = default)
     {
         return GetAsyncReturn<List<string>>(

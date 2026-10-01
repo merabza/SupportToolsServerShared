@@ -56,6 +56,10 @@ public static class SupportToolsServerApiRoutes
         public const string SyncUpEditorConfigFileTypesPrefix = "/syncupeditorconfigfiletypes";
         public const string SyncUpEditorConfigFileTypes = SyncUpEditorConfigFileTypesPrefix + "/{merge?}";
 
+        // DELETE api/v1/git/deleteeditorconfigfiletype/{key}
+        public const string DeleteEditorConfigFileTypePrefix = "/deleteeditorconfigfiletype";
+        public const string DeleteEditorConfigFileType = DeleteEditorConfigFileTypePrefix + "/{key}";
+
         //// GET api/v1/databases/getdatabasenames
         //public const string TestGitRepos = "/testgitrepos";
 
