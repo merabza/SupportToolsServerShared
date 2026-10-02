@@ -45,4 +45,15 @@ public static class SupportToolsServerApiClientErrors
     {
         return Error.Problem(nameof(ValuesNotUnique), $"{valueName} Values Are Not Unique");
     }
+
+    public static Error InvalidGitFolderName(string valueName)
+    {
+        return Error.Problem(nameof(InvalidGitFolderName), $"{valueName} Is Not A Valid Relative Folder Path");
+    }
+
+    public static Error InvalidGitAddress(string valueName)
+    {
+        return Error.Problem(nameof(InvalidGitAddress),
+            $"{valueName} Is Not A Valid Git Address (git@host:path, ssh:// Or https://)");
+    }
 }

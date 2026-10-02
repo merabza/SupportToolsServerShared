@@ -85,4 +85,25 @@ public sealed class SupportToolsServerApiClientErrorsTests
         Assert.Equal("GitProjectName Values Are Not Unique", error.Description);
         Assert.Equal(ErrorType.Problem, error.Type);
     }
+
+    [Fact]
+    public void InvalidGitFolderName_IsAProblemNamingTheValue()
+    {
+        Error error = SupportToolsServerApiClientErrors.InvalidGitFolderName("RepoA.GitProjectFolderName");
+
+        Assert.Equal("InvalidGitFolderName", error.Code);
+        Assert.Equal("RepoA.GitProjectFolderName Is Not A Valid Relative Folder Path", error.Description);
+        Assert.Equal(ErrorType.Problem, error.Type);
+    }
+
+    [Fact]
+    public void InvalidGitAddress_IsAProblemNamingTheValueAndTheAllowedForms()
+    {
+        Error error = SupportToolsServerApiClientErrors.InvalidGitAddress("RepoA.GitProjectAddress");
+
+        Assert.Equal("InvalidGitAddress", error.Code);
+        Assert.Equal("RepoA.GitProjectAddress Is Not A Valid Git Address (git@host:path, ssh:// Or https://)",
+            error.Description);
+        Assert.Equal(ErrorType.Problem, error.Type);
+    }
 }
