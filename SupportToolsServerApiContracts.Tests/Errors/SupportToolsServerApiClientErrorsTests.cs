@@ -6,6 +6,48 @@ namespace SupportToolsServerApiContracts.Tests.Errors;
 
 public sealed class SupportToolsServerApiClientErrorsTests
 {
+    //The SupportTools sync engine recognizes the registry errors by these exact codes (RegistrySyncServerErrorCodes)
+    [Fact]
+    public void RecordWithNameNotFound_IsANotFoundErrorNamingTheEntityAndTheName()
+    {
+        Error error = SupportToolsServerApiClientErrors.RecordWithNameNotFound("Environment", "Prod");
+
+        Assert.Equal("RecordWithNameNotFound", error.Code);
+        Assert.Equal("Environment With Name Prod Not Found", error.Description);
+        Assert.Equal(ErrorType.NotFound, error.Type);
+    }
+
+    [Fact]
+    public void RecordIsInUse_IsAConflictListingTheUsages()
+    {
+        Error error =
+            SupportToolsServerApiClientErrors.RecordIsInUse("Environment", "Prod", ["ServerInfo AppA", "Project B"]);
+
+        Assert.Equal("RecordIsInUse", error.Code);
+        Assert.Equal("Environment Prod Is Used By: ServerInfo AppA, Project B", error.Description);
+        Assert.Equal(ErrorType.Conflict, error.Type);
+    }
+
+    [Fact]
+    public void ConcurrencyConflict_IsAConflictNamingTheExpectedAndTheActualVersion()
+    {
+        Error error = SupportToolsServerApiClientErrors.ConcurrencyConflict("Environment", "Prod", 2, 3);
+
+        Assert.Equal("ConcurrencyConflict", error.Code);
+        Assert.Equal("Environment Prod Version Conflict: Expected 2, Actual 3", error.Description);
+        Assert.Equal(ErrorType.Conflict, error.Type);
+    }
+
+    [Fact]
+    public void ReferencedRecordsNotFound_IsANotFoundErrorListingTheNames()
+    {
+        Error error = SupportToolsServerApiClientErrors.ReferencedRecordsNotFound("Runtime", ["linux-arm", "osx-x64"]);
+
+        Assert.Equal("ReferencedRecordsNotFound", error.Code);
+        Assert.Equal("Referenced Runtime Records Not Found: linux-arm, osx-x64", error.Description);
+        Assert.Equal(ErrorType.NotFound, error.Type);
+    }
+
     [Fact]
     public void GitWithKeyNotFound_IsANotFoundErrorNamingTheKey()
     {

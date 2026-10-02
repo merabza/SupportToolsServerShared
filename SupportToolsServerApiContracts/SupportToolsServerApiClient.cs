@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,45 @@ public sealed class SupportToolsServerApiClient : ApiClient
         string? apiKey, bool useConsole) : base(logger, httpClientFactory, server, apiKey,
         new StringMessageHubClient(server, apiKey), useConsole)
     {
+    }
+
+    //რეესტრი: გარემოები. სია სახელით დალაგებულია და ყოველ ჩანაწერს თავისი Version აქვს
+    public Task<Result<List<StsEnvironmentDataModel>>> GetEnvironments(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsEnvironmentDataModel>>(
+            $"{SupportToolsServerApiRoutes.Environments.Base}{SupportToolsServerApiRoutes.Environments.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsEnvironmentDataModel>> GetEnvironment(string key,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsEnvironmentDataModel>(
+            $"{SupportToolsServerApiRoutes.Environments.Base}/{Uri.EscapeDataString(key)}", false, cancellationToken);
+    }
+
+    //upsert: environment.Version მოსალოდნელი ვერსიაა (0 — შექმნა). წარმატებისას ბრუნდება ჩანაწერის ახალი ვერსია
+    public Task<Result<int>> UpdateEnvironment(string key, StsEnvironmentDataModel environment,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(environment);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.Environments.Base}{SupportToolsServerApiRoutes.Environments.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, cancellationToken);
+    }
+
+    //ვერსიით წაშლა მხოლოდ მაშინ სრულდება, თუ სერვერზე შენახული ვერსია იგივეა. version-ის გარეშე წაშლა უპირობოა
+    public ValueTask<Result> DeleteEnvironment(string key, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.Environments.Base}{SupportToolsServerApiRoutes.Environments.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
+    private static string VersionQuery(int? version)
+    {
+        return version is null ? string.Empty : $"?version={version.Value.ToString(CultureInfo.InvariantCulture)}";
     }
 
     //შემოწმდეს არსებული ბაზის მდგომარეობა და საჭიროების შემთხვევაში გამოასწოროს ბაზა

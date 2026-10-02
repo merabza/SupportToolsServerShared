@@ -339,4 +339,126 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("/api/v1/git/gitignorefiletypeslist", handler.LastRequestUri!.AbsolutePath);
         Assert.Equal(["CSharp", "React"], result.Value);
     }
+
+    [Fact]
+    public async Task GetEnvironments_GetsTheListWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"Dev","description":null,"version":1},{"name":"Prod","description":"Production","version":3}]""");
+
+        (Result<List<StsEnvironmentDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetEnvironments());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/environments", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        Assert.Null(result.Value[0].Description);
+        Assert.Equal("Prod", result.Value[1].Name);
+        Assert.Equal("Production", result.Value[1].Description);
+        Assert.Equal(3, result.Value[1].Version);
+    }
+
+    [Fact]
+    public async Task GetEnvironment_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"Pre Prod/1","description":"Staging","version":2}""");
+
+        (Result<StsEnvironmentDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetEnvironment("Pre Prod/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/environments/Pre%20Prod%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("Staging", result.Value.Description);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task GetEnvironment_ReturnsRecordWithNameNotFound()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.NotFound,
+            """{"title":"RecordWithNameNotFound","status":404,"detail":"Environment With Name Prod Not Found"}""",
+            "application/problem+json");
+
+        Result<StsEnvironmentDataModel> result = await CreateClient(handler).GetEnvironment("Prod");
+
+        Assert.Equal("RecordWithNameNotFound", result.Error.Code);
+        Assert.Equal(ErrorType.NotFound, result.Error.Type);
+    }
+
+    [Fact]
+    public async Task UpdateEnvironment_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var environment = new StsEnvironmentDataModel { Name = "Pre Prod/1", Description = "Staging", Version = 3 };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateEnvironment("Pre Prod/1", environment));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/environments/update/Pre%20Prod%2F1", handler.LastRequestUri!.AbsolutePath);
+        StsEnvironmentDataModel sent = JsonConvert.DeserializeObject<StsEnvironmentDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("Pre Prod/1", sent.Name);
+        Assert.Equal("Staging", sent.Description);
+        Assert.Equal(3, sent.Version);
+    }
+
+    [Fact]
+    public async Task UpdateEnvironment_ReturnsConcurrencyConflict()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.Conflict,
+            """{"title":"ConcurrencyConflict","status":409,"detail":"Environment Prod Version Conflict: Expected 2, Actual 3"}""",
+            "application/problem+json");
+
+        (Result<int> result, _) = await CaptureConsole(() =>
+            CreateClient(handler).UpdateEnvironment("Prod", new StsEnvironmentDataModel { Name = "Prod", Version = 2 }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Equal("Environment Prod Version Conflict: Expected 2, Actual 3", result.Error.Description);
+    }
+
+    [Fact]
+    public async Task DeleteEnvironment_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteEnvironment("Pre Prod/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/environments/delete/Pre%20Prod%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteEnvironment_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) = await CaptureConsole(async () => await CreateClient(handler).DeleteEnvironment("Dev", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/environments/delete/Dev", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteEnvironment_ReturnsRecordIsInUse()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.Conflict,
+            """{"title":"RecordIsInUse","status":409,"detail":"Environment Prod Is Used By: ServerInfo AppA"}""",
+            "application/problem+json");
+
+        (Result result, _) = await CaptureConsole(async () => await CreateClient(handler).DeleteEnvironment("Prod", 1));
+
+        Assert.Equal("RecordIsInUse", result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+    }
 }

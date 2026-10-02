@@ -6,6 +6,27 @@ public static class SupportToolsServerApiRoutes
     private const string Version = "v1";
     public const string ApiBase = Root + "/" + Version;
 
+    //რეესტრის არეალი (SupportToolsServer-ის CLAUDE.md, Registry conventions). სერვერი group-ს ApiBase + Base-ზე
+    //map-ავს, კლიენტი კი key-ს Uri.EscapeDataString-ით უმატებს Base-ს ან …Prefix-ს
+    public static class Environments
+    {
+        public const string Base = "/environments";
+
+        // GET api/v1/environments
+        public const string List = "";
+
+        // GET api/v1/environments/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/environments/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/environments/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
     public static class Git
     {
         public const string GitBase = "/git";
