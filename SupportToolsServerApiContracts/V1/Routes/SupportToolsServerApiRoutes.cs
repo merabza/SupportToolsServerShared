@@ -103,6 +103,82 @@ public static class SupportToolsServerApiRoutes
         public const string Delete = DeletePrefix + "/{key}";
     }
 
+    public static class SmartSchemas
+    {
+        public const string Base = "/smartschemas";
+
+        // GET api/v1/smartschemas
+        public const string List = "";
+
+        // GET api/v1/smartschemas/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/smartschemas/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/smartschemas/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
+    public static class FileStorages
+    {
+        public const string Base = "/filestorages";
+
+        // GET api/v1/filestorages
+        public const string List = "";
+
+        // GET api/v1/filestorages/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/filestorages/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/filestorages/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
+    public static class ApiClients
+    {
+        public const string Base = "/apiclients";
+
+        // GET api/v1/apiclients
+        public const string List = "";
+
+        // GET api/v1/apiclients/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/apiclients/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/apiclients/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
+    public static class DatabaseServerConnections
+    {
+        public const string Base = "/databaseserverconnections";
+
+        // GET api/v1/databaseserverconnections
+        public const string List = "";
+
+        // GET api/v1/databaseserverconnections/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/databaseserverconnections/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/databaseserverconnections/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
     public static class Git
     {
         public const string GitBase = "/git";

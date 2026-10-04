@@ -35,6 +35,19 @@ public sealed class SupportToolsServerApiClientTests
         return new SupportToolsServerApiClient(null, new FakeHttpClientFactory(handler), Server, null, false);
     }
 
+    //SupportTools creates its client with the console, which writes the errors of the server
+    private static SupportToolsServerApiClient CreateConsoleClient(HttpMessageHandler handler)
+    {
+        return new SupportToolsServerApiClient(null, new FakeHttpClientFactory(handler), Server, null, true);
+    }
+
+    private static StubHttpMessageHandler ConflictHandler(string entityName)
+    {
+        return new StubHttpMessageHandler(HttpStatusCode.Conflict,
+            $$"""{"title":"ConcurrencyConflict","status":409,"detail":"{{entityName}} A Version Conflict: Expected 1, Actual 2"}""",
+            "application/problem+json");
+    }
+
     private static StsGitDataModel GitRepo(string name)
     {
         return new StsGitDataModel
@@ -800,6 +813,487 @@ public sealed class SupportToolsServerApiClientTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal("/api/v1/dotnettools/delete/Stryker", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task GetSmartSchemas_GetsTheListWithTheDetailsAndTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"Hourly","lastPreserveCount":1,"details":[{"periodType":"Hour","preserveCount":48}],"version":1},{"name":"Reduce","lastPreserveCount":2,"details":[],"version":3}]""");
+
+        (Result<List<StsSmartSchemaDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetSmartSchemas());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/smartschemas", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        StsSmartSchemaDetailDataModel detail = Assert.Single(result.Value[0].Details);
+        Assert.Equal("Hour", detail.PeriodType);
+        Assert.Equal(48, detail.PreserveCount);
+        Assert.Equal("Reduce", result.Value[1].Name);
+        Assert.Equal(2, result.Value[1].LastPreserveCount);
+        Assert.Empty(result.Value[1].Details);
+        Assert.Equal(3, result.Value[1].Version);
+    }
+
+    [Fact]
+    public async Task GetSmartSchema_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"Daily Standard/1","lastPreserveCount":1,"details":[{"periodType":"Day","preserveCount":3}],"version":2}""");
+
+        (Result<StsSmartSchemaDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetSmartSchema("Daily Standard/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/smartschemas/Daily%20Standard%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("Day", Assert.Single(result.Value.Details).PeriodType);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateSmartSchema_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var smartSchema = new StsSmartSchemaDataModel
+        {
+            Name = "Daily Standard/1",
+            LastPreserveCount = 1,
+            Details = [new StsSmartSchemaDetailDataModel { PeriodType = "Day", PreserveCount = 3 }],
+            Version = 3
+        };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateSmartSchema("Daily Standard/1", smartSchema));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/smartschemas/update/Daily%20Standard%2F1", handler.LastRequestUri!.AbsolutePath);
+        StsSmartSchemaDataModel sent = JsonConvert.DeserializeObject<StsSmartSchemaDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("Daily Standard/1", sent.Name);
+        Assert.Equal(1, sent.LastPreserveCount);
+        Assert.Equal(3, Assert.Single(sent.Details).PreserveCount);
+        Assert.Equal(3, sent.Version);
+    }
+
+    //A smart schema holds no secret, so the console shows its body like any other request
+    [Fact]
+    public async Task UpdateSmartSchema_WritesTheBodyOfAFailedRequestToTheConsole()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("SmartSchema");
+
+        (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
+            .UpdateSmartSchema("Reduce", new StsSmartSchemaDataModel { Name = "Reduce", Version = 1 }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Contains("request body was", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DeleteSmartSchema_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteSmartSchema("Daily Standard/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/smartschemas/delete/Daily%20Standard%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteSmartSchema_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) = await CaptureConsole(async () => await CreateClient(handler).DeleteSmartSchema("Reduce", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/smartschemas/delete/Reduce", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task GetFileStorages_GetsTheListWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"Exchange","fileStoragePath":"ftp://ftp.example.com/x/","userName":"made-up-user","password":"made-up-password","fileNameMaxLength":255,"fileSizeSplitPositionInRow":4,"ftpSiteLsFileOffset":1,"version":3},{"name":"LocalBak","fileStoragePath":"D:\\Bak","userName":null,"password":null,"fileNameMaxLength":0,"fileSizeSplitPositionInRow":0,"ftpSiteLsFileOffset":0,"version":1}]""");
+
+        (Result<List<StsFileStorageDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetFileStorages());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/filestorages", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        Assert.Equal("ftp://ftp.example.com/x/", result.Value[0].FileStoragePath);
+        Assert.Equal("made-up-user", result.Value[0].UserName);
+        Assert.Equal("made-up-password", result.Value[0].Password);
+        Assert.Equal(255, result.Value[0].FileNameMaxLength);
+        Assert.Equal(4, result.Value[0].FileSizeSplitPositionInRow);
+        Assert.Equal(1, result.Value[0].FtpSiteLsFileOffset);
+        Assert.Equal(3, result.Value[0].Version);
+        Assert.Equal(@"D:\Bak", result.Value[1].FileStoragePath);
+        Assert.Null(result.Value[1].Password);
+    }
+
+    [Fact]
+    public async Task GetFileStorage_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"Local Bak/1","fileStoragePath":"D:\\Bak","version":2}""");
+
+        (Result<StsFileStorageDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetFileStorage("Local Bak/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/filestorages/Local%20Bak%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(@"D:\Bak", result.Value.FileStoragePath);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateFileStorage_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var fileStorage = new StsFileStorageDataModel
+        {
+            Name = "Local Bak/1",
+            FileStoragePath = "ftp://ftp.example.com/x/",
+            UserName = "made-up-user",
+            Password = "made-up-password",
+            FileNameMaxLength = 255,
+            FileSizeSplitPositionInRow = 4,
+            FtpSiteLsFileOffset = 1,
+            Version = 3
+        };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateFileStorage("Local Bak/1", fileStorage));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/filestorages/update/Local%20Bak%2F1", handler.LastRequestUri!.AbsolutePath);
+        StsFileStorageDataModel sent = JsonConvert.DeserializeObject<StsFileStorageDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("Local Bak/1", sent.Name);
+        Assert.Equal("ftp://ftp.example.com/x/", sent.FileStoragePath);
+        Assert.Equal("made-up-user", sent.UserName);
+        Assert.Equal("made-up-password", sent.Password);
+        Assert.Equal(255, sent.FileNameMaxLength);
+        Assert.Equal(4, sent.FileSizeSplitPositionInRow);
+        Assert.Equal(1, sent.FtpSiteLsFileOffset);
+        Assert.Equal(3, sent.Version);
+    }
+
+    //The body holds the password, so the console of a failed request leaves it out
+    [Fact]
+    public async Task UpdateFileStorage_DoesNotWriteTheSecretsOfAFailedRequestToTheConsole()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("FileStorage");
+
+        (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
+            .UpdateFileStorage("A",
+                new StsFileStorageDataModel
+                {
+                    Name = "A", UserName = "made-up-user", Password = "made-up-password", Version = 1
+                }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Contains("409 Conflict", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("request body was", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("made-up", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DeleteFileStorage_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteFileStorage("Local Bak/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/filestorages/delete/Local%20Bak%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteFileStorage_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteFileStorage("Exchange", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/filestorages/delete/Exchange", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task GetApiClients_GetsTheListWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"Pc1.WebAgent","server":"http://localhost:5031/api/v1/","apiKey":"made-up-key","version":3},{"name":"Pc2.WebAgent","server":null,"apiKey":null,"version":1}]""");
+
+        (Result<List<StsApiClientDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetApiClients());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/apiclients", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        Assert.Equal("http://localhost:5031/api/v1/", result.Value[0].Server);
+        Assert.Equal("made-up-key", result.Value[0].ApiKey);
+        Assert.Equal(3, result.Value[0].Version);
+        Assert.Null(result.Value[1].Server);
+        Assert.Null(result.Value[1].ApiKey);
+    }
+
+    //The names of the API clients hold dots
+    [Fact]
+    public async Task GetApiClient_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"Pc1.Web Agent/1","server":"http://localhost:5031/api/v1/","apiKey":"made-up-key","version":2}""");
+
+        (Result<StsApiClientDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetApiClient("Pc1.Web Agent/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/apiclients/Pc1.Web%20Agent%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("made-up-key", result.Value.ApiKey);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateApiClient_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var apiClient = new StsApiClientDataModel
+        {
+            Name = "Pc1.Web Agent/1", Server = "http://localhost:5031/api/v1/", ApiKey = "made-up-key", Version = 3
+        };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateApiClient("Pc1.Web Agent/1", apiClient));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/apiclients/update/Pc1.Web%20Agent%2F1", handler.LastRequestUri!.AbsolutePath);
+        StsApiClientDataModel sent = JsonConvert.DeserializeObject<StsApiClientDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("Pc1.Web Agent/1", sent.Name);
+        Assert.Equal("http://localhost:5031/api/v1/", sent.Server);
+        Assert.Equal("made-up-key", sent.ApiKey);
+        Assert.Equal(3, sent.Version);
+    }
+
+    //The body holds the API key, so the console of a failed request leaves it out
+    [Fact]
+    public async Task UpdateApiClient_DoesNotWriteTheSecretsOfAFailedRequestToTheConsole()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("ApiClient");
+
+        (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
+            .UpdateApiClient("A", new StsApiClientDataModel { Name = "A", ApiKey = "made-up-key", Version = 1 }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Contains("409 Conflict", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("request body was", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("made-up-key", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DeleteApiClient_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteApiClient("Pc1.Web Agent/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/apiclients/delete/Pc1.Web%20Agent%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteApiClient_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteApiClient("Pc1.WebAgent", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/apiclients/delete/Pc1.WebAgent", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteApiClient_ReturnsRecordIsInUse()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.Conflict,
+            """{"title":"RecordIsInUse","status":409,"detail":"ApiClient Pc1.WebAgent Is Used By: DatabaseServerConnection Pc1.Sql"}""",
+            "application/problem+json");
+
+        (Result result, _) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteApiClient("Pc1.WebAgent", 1));
+
+        Assert.Equal("RecordIsInUse", result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Equal("ApiClient Pc1.WebAgent Is Used By: DatabaseServerConnection Pc1.Sql", result.Error.Description);
+    }
+
+    [Fact]
+    public async Task GetDatabaseServerConnections_GetsTheListWithTheFoldersSetsAndTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"Pc1.Sql","databaseServerProvider":"WebAgent","dbWebAgentName":"Pc1.WebAgent","remoteDbConnectionName":"Main","serverAddress":"pc1","windowsNtIntegratedSecurity":true,"serverUser":"made-up-user","serverPass":"made-up-password","trustServerCertificate":true,"connectionTimeOut":30,"encrypt":true,"databaseFoldersSets":[{"name":"Default","backup":"D:\\Bak","data":"D:\\Data","dataLog":"D:\\Log"}],"version":3},{"name":"Pc2.Sql","databaseServerProvider":"SqlServer","databaseFoldersSets":[],"version":1}]""");
+
+        (Result<List<StsDatabaseServerConnectionDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetDatabaseServerConnections());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/databaseserverconnections", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        StsDatabaseServerConnectionDataModel first = result.Value[0];
+        Assert.Equal("WebAgent", first.DatabaseServerProvider);
+        Assert.Equal("Pc1.WebAgent", first.DbWebAgentName);
+        Assert.Equal("Main", first.RemoteDbConnectionName);
+        Assert.Equal("pc1", first.ServerAddress);
+        Assert.True(first.WindowsNtIntegratedSecurity);
+        Assert.Equal("made-up-user", first.ServerUser);
+        Assert.Equal("made-up-password", first.ServerPass);
+        Assert.True(first.TrustServerCertificate);
+        Assert.Equal(30, first.ConnectionTimeOut);
+        Assert.True(first.Encrypt);
+        StsDatabaseFoldersSetDataModel foldersSet = Assert.Single(first.DatabaseFoldersSets);
+        Assert.Equal("Default", foldersSet.Name);
+        Assert.Equal(@"D:\Bak", foldersSet.Backup);
+        Assert.Equal(@"D:\Data", foldersSet.Data);
+        Assert.Equal(@"D:\Log", foldersSet.DataLog);
+        Assert.Equal(3, first.Version);
+        Assert.Null(result.Value[1].DbWebAgentName);
+        Assert.Empty(result.Value[1].DatabaseFoldersSets);
+    }
+
+    [Fact]
+    public async Task GetDatabaseServerConnection_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"Pc1.Sql Main/1","databaseServerProvider":"SqlServer","databaseFoldersSets":[],"version":2}""");
+
+        (Result<StsDatabaseServerConnectionDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetDatabaseServerConnection("Pc1.Sql Main/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/databaseserverconnections/Pc1.Sql%20Main%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("SqlServer", result.Value.DatabaseServerProvider);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateDatabaseServerConnection_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var connection = new StsDatabaseServerConnectionDataModel
+        {
+            Name = "Pc1.Sql Main/1",
+            DatabaseServerProvider = "WebAgent",
+            DbWebAgentName = "Pc1.WebAgent",
+            ServerUser = "made-up-user",
+            ServerPass = "made-up-password",
+            ConnectionTimeOut = 30,
+            DatabaseFoldersSets = [new StsDatabaseFoldersSetDataModel { Name = "Default", Backup = @"D:\Bak" }],
+            Version = 3
+        };
+
+        (Result<int> result, string output) = await CaptureConsole(() =>
+            CreateClient(handler).UpdateDatabaseServerConnection("Pc1.Sql Main/1", connection));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/databaseserverconnections/update/Pc1.Sql%20Main%2F1",
+            handler.LastRequestUri!.AbsolutePath);
+        StsDatabaseServerConnectionDataModel sent =
+            JsonConvert.DeserializeObject<StsDatabaseServerConnectionDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("Pc1.Sql Main/1", sent.Name);
+        Assert.Equal("WebAgent", sent.DatabaseServerProvider);
+        Assert.Equal("Pc1.WebAgent", sent.DbWebAgentName);
+        Assert.Equal("made-up-user", sent.ServerUser);
+        Assert.Equal("made-up-password", sent.ServerPass);
+        Assert.Equal(30, sent.ConnectionTimeOut);
+        Assert.Equal(@"D:\Bak", Assert.Single(sent.DatabaseFoldersSets).Backup);
+        Assert.Equal(3, sent.Version);
+    }
+
+    //The body holds the user and the password, so the console of a failed request leaves it out
+    [Fact]
+    public async Task UpdateDatabaseServerConnection_DoesNotWriteTheSecretsOfAFailedRequestToTheConsole()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("DatabaseServerConnection");
+
+        (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
+            .UpdateDatabaseServerConnection("A",
+                new StsDatabaseServerConnectionDataModel
+                {
+                    Name = "A",
+                    DatabaseServerProvider = "SqlServer",
+                    ServerUser = "made-up-user",
+                    ServerPass = "made-up-password",
+                    Version = 1
+                }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Contains("409 Conflict", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("request body was", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("made-up", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DeleteDatabaseServerConnection_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) = await CaptureConsole(async () =>
+            await CreateClient(handler).DeleteDatabaseServerConnection("Pc1.Sql Main/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/databaseserverconnections/delete/Pc1.Sql%20Main%2F1",
+            handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteDatabaseServerConnection_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) = await CaptureConsole(async () =>
+            await CreateClient(handler).DeleteDatabaseServerConnection("Pc1.Sql", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/databaseserverconnections/delete/Pc1.Sql", handler.LastRequestUri!.AbsolutePath);
         Assert.Equal(string.Empty, handler.LastRequestUri.Query);
     }
 }

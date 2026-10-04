@@ -187,6 +187,138 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
+    //რეესტრი: ჭკვიანი სქემები, დეტალებით. განახლება სქემას დეტალებიანად ანაცვლებს
+    public Task<Result<List<StsSmartSchemaDataModel>>> GetSmartSchemas(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsSmartSchemaDataModel>>(
+            $"{SupportToolsServerApiRoutes.SmartSchemas.Base}{SupportToolsServerApiRoutes.SmartSchemas.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsSmartSchemaDataModel>> GetSmartSchema(string key,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsSmartSchemaDataModel>(
+            $"{SupportToolsServerApiRoutes.SmartSchemas.Base}/{Uri.EscapeDataString(key)}", false, cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateSmartSchema(string key, StsSmartSchemaDataModel smartSchema,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(smartSchema);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.SmartSchemas.Base}{SupportToolsServerApiRoutes.SmartSchemas.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteSmartSchema(string key, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.SmartSchemas.Base}{SupportToolsServerApiRoutes.SmartSchemas.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
+    //რეესტრი: ფაილსაცავები. ჩანაწერში პაროლია, ამიტომ განახლების ტანი შეცდომისას კონსოლზე არ იბეჭდება
+    public Task<Result<List<StsFileStorageDataModel>>> GetFileStorages(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsFileStorageDataModel>>(
+            $"{SupportToolsServerApiRoutes.FileStorages.Base}{SupportToolsServerApiRoutes.FileStorages.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsFileStorageDataModel>> GetFileStorage(string key,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsFileStorageDataModel>(
+            $"{SupportToolsServerApiRoutes.FileStorages.Base}/{Uri.EscapeDataString(key)}", false, cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateFileStorage(string key, StsFileStorageDataModel fileStorage,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(fileStorage);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.FileStorages.Base}{SupportToolsServerApiRoutes.FileStorages.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteFileStorage(string key, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.FileStorages.Base}{SupportToolsServerApiRoutes.FileStorages.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
+    //რეესტრი: API კლიენტები. ჩანაწერში API key-ა, ამიტომ განახლების ტანი შეცდომისას კონსოლზე არ იბეჭდება
+    public Task<Result<List<StsApiClientDataModel>>> GetApiClients(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsApiClientDataModel>>(
+            $"{SupportToolsServerApiRoutes.ApiClients.Base}{SupportToolsServerApiRoutes.ApiClients.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsApiClientDataModel>> GetApiClient(string key, CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsApiClientDataModel>(
+            $"{SupportToolsServerApiRoutes.ApiClients.Base}/{Uri.EscapeDataString(key)}", false, cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateApiClient(string key, StsApiClientDataModel apiClient,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(apiClient);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.ApiClients.Base}{SupportToolsServerApiRoutes.ApiClients.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+    }
+
+    //ApiClient-ს, რომელსაც სხვა ჩანაწერი იყენებს (მაგალითად, DatabaseServerConnection), სერვერი არ შლის: 409 RecordIsInUse
+    public ValueTask<Result> DeleteApiClient(string key, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.ApiClients.Base}{SupportToolsServerApiRoutes.ApiClients.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
+    //რეესტრი: ბაზის სერვერებთან კავშირები, folders set-ებით. ჩანაწერში მომხმარებელი და პაროლია, ამიტომ განახლების ტანი
+    //შეცდომისას კონსოლზე არ იბეჭდება
+    public Task<Result<List<StsDatabaseServerConnectionDataModel>>> GetDatabaseServerConnections(
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsDatabaseServerConnectionDataModel>>(
+            $"{SupportToolsServerApiRoutes.DatabaseServerConnections.Base}{SupportToolsServerApiRoutes.DatabaseServerConnections.List}",
+            false, cancellationToken);
+    }
+
+    public Task<Result<StsDatabaseServerConnectionDataModel>> GetDatabaseServerConnection(string key,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsDatabaseServerConnectionDataModel>(
+            $"{SupportToolsServerApiRoutes.DatabaseServerConnections.Base}/{Uri.EscapeDataString(key)}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateDatabaseServerConnection(string key,
+        StsDatabaseServerConnectionDataModel databaseServerConnection, CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(databaseServerConnection);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.DatabaseServerConnections.Base}{SupportToolsServerApiRoutes.DatabaseServerConnections.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteDatabaseServerConnection(string key, int? version,
+        CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.DatabaseServerConnections.Base}{SupportToolsServerApiRoutes.DatabaseServerConnections.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
     private static string VersionQuery(int? version)
     {
         return version is null ? string.Empty : $"?version={version.Value.ToString(CultureInfo.InvariantCulture)}";
