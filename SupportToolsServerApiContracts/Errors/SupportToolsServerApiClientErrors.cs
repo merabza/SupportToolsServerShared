@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using SystemTools.SharedKernel;
 
 namespace SupportToolsServerApiContracts.Errors;
@@ -30,6 +31,15 @@ public static class SupportToolsServerApiClientErrors
     {
         return Error.NotFound(nameof(ReferencedRecordsNotFound),
             $"Referenced {entityName} Records Not Found: {string.Join(", ", names)}");
+    }
+
+    //კონტრაქტი რამდენიმე აგრეგატის არარსებულ ჩანაწერებს მიმართავს (მაგალითად, Server.WebAgentName და Server.Runtime).
+    //სახელები ჩანაწერის ტიპითაა დაჯგუფებული. თითო ტიპის ტექსტი ზემოთა მეთოდისაა და ტიპები "; "-ით გამოიყოფა, ამიტომ
+    //ერთი ტიპისას შეცდომა ზემოთა მეთოდის შეცდომას ემთხვევა
+    public static Error ReferencedRecordsNotFound(ILookup<string, string> namesByEntityName)
+    {
+        return Error.NotFound(nameof(ReferencedRecordsNotFound),
+            string.Join("; ", namesByEntityName.Select(x => ReferencedRecordsNotFound(x.Key, x).Description)));
     }
 
     public static Error GitWithKeyNotFound(string gitKey)

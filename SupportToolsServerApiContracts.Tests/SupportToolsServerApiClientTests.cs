@@ -557,6 +557,21 @@ public sealed class SupportToolsServerApiClientTests
     }
 
     [Fact]
+    public async Task DeleteRuntime_ReturnsRecordIsInUse()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.Conflict,
+            """{"title":"RecordIsInUse","status":409,"detail":"Runtime linux-x64 Is Used By: Server dl360"}""",
+            "application/problem+json");
+
+        (Result result, _) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteRuntime("linux-x64", 1));
+
+        Assert.Equal("RecordIsInUse", result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Equal("Runtime linux-x64 Is Used By: Server dl360", result.Error.Description);
+    }
+
+    [Fact]
     public async Task GetNpmPackages_GetsTheListWithTheVersionsWithoutTheMessageHub()
     {
         using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
@@ -1294,6 +1309,144 @@ public sealed class SupportToolsServerApiClientTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal("/api/v1/databaseserverconnections/delete/Pc1.Sql", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task GetServers_GetsTheListWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"dl360","webAgentName":"Dl360.WebAgent","webAgentInstallerName":"Dl360.Installer","filesUserName":"deployer","filesUsersGroupName":"deployers","runtime":"linux-x64","serverSideDownloadFolder":"/home/deployer/Download","serverSideDeployFolder":"/opt/apps","version":3},{"name":"PAZISI","version":1}]""");
+
+        (Result<List<StsServerDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetServers());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/servers", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        StsServerDataModel first = result.Value[0];
+        Assert.Equal("dl360", first.Name);
+        Assert.Equal("Dl360.WebAgent", first.WebAgentName);
+        Assert.Equal("Dl360.Installer", first.WebAgentInstallerName);
+        Assert.Equal("deployer", first.FilesUserName);
+        Assert.Equal("deployers", first.FilesUsersGroupName);
+        Assert.Equal("linux-x64", first.Runtime);
+        Assert.Equal("/home/deployer/Download", first.ServerSideDownloadFolder);
+        Assert.Equal("/opt/apps", first.ServerSideDeployFolder);
+        Assert.Equal(3, first.Version);
+        Assert.Null(result.Value[1].WebAgentName);
+        Assert.Null(result.Value[1].Runtime);
+    }
+
+    [Fact]
+    public async Task GetServer_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"dl 360/1","runtime":"linux-x64","version":2}""");
+
+        (Result<StsServerDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetServer("dl 360/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/servers/dl%20360%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("linux-x64", result.Value.Runtime);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateServer_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var server = new StsServerDataModel
+        {
+            Name = "dl 360/1",
+            WebAgentName = "Dl360.WebAgent",
+            WebAgentInstallerName = "Dl360.Installer",
+            FilesUserName = "deployer",
+            FilesUsersGroupName = "deployers",
+            Runtime = "linux-x64",
+            ServerSideDownloadFolder = "/home/deployer/Download",
+            ServerSideDeployFolder = "/opt/apps",
+            Version = 3
+        };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateServer("dl 360/1", server));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/servers/update/dl%20360%2F1", handler.LastRequestUri!.AbsolutePath);
+        StsServerDataModel sent = JsonConvert.DeserializeObject<StsServerDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("dl 360/1", sent.Name);
+        Assert.Equal("Dl360.WebAgent", sent.WebAgentName);
+        Assert.Equal("Dl360.Installer", sent.WebAgentInstallerName);
+        Assert.Equal("deployer", sent.FilesUserName);
+        Assert.Equal("deployers", sent.FilesUsersGroupName);
+        Assert.Equal("linux-x64", sent.Runtime);
+        Assert.Equal("/home/deployer/Download", sent.ServerSideDownloadFolder);
+        Assert.Equal("/opt/apps", sent.ServerSideDeployFolder);
+        Assert.Equal(3, sent.Version);
+    }
+
+    //A server holds no secret, so the console shows its body like any other request
+    [Fact]
+    public async Task UpdateServer_WritesTheBodyOfAFailedRequestToTheConsole()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("Server");
+
+        (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
+            .UpdateServer("dl360", new StsServerDataModel { Name = "dl360", FilesUserName = "deployer", Version = 1 }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Contains("request body was", output, StringComparison.Ordinal);
+        Assert.Contains("deployer", output, StringComparison.Ordinal);
+    }
+
+    //Every missing name comes in one error, grouped by the type of the referenced record
+    [Fact]
+    public async Task UpdateServer_ReturnsReferencedRecordsNotFound()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.NotFound,
+            """{"title":"ReferencedRecordsNotFound","status":404,"detail":"Referenced ApiClient Records Not Found: Pc9.WebAgent; Referenced Runtime Records Not Found: osx-arm64"}""",
+            "application/problem+json");
+
+        (Result<int> result, _) = await CaptureConsole(() =>
+            CreateClient(handler).UpdateServer("dl360", new StsServerDataModel { Name = "dl360" }));
+
+        Assert.Equal("ReferencedRecordsNotFound", result.Error.Code);
+        Assert.Equal(ErrorType.NotFound, result.Error.Type);
+        Assert.Equal(
+            "Referenced ApiClient Records Not Found: Pc9.WebAgent; Referenced Runtime Records Not Found: osx-arm64",
+            result.Error.Description);
+    }
+
+    [Fact]
+    public async Task DeleteServer_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteServer("dl 360/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/servers/delete/dl%20360%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteServer_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) = await CaptureConsole(async () => await CreateClient(handler).DeleteServer("dl360", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/servers/delete/dl360", handler.LastRequestUri!.AbsolutePath);
         Assert.Equal(string.Empty, handler.LastRequestUri.Query);
     }
 }

@@ -179,6 +179,26 @@ public static class SupportToolsServerApiRoutes
         public const string Delete = DeletePrefix + "/{key}";
     }
 
+    //გადარქმევის route არ არის: სერვერის გადარქმევა წაშლა და ახლის შექმნაა
+    public static class Servers
+    {
+        public const string Base = "/servers";
+
+        // GET api/v1/servers
+        public const string List = "";
+
+        // GET api/v1/servers/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/servers/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/servers/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
     public static class Git
     {
         public const string GitBase = "/git";

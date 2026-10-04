@@ -82,6 +82,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             false, bodyJsonData, cancellationToken);
     }
 
+    //Runtime-ს, რომელსაც სერვერი იყენებს, სერვერი არ შლის: 409 RecordIsInUse
     public ValueTask<Result> DeleteRuntime(string key, int? version, CancellationToken cancellationToken = default)
     {
         return DeleteAsync(
@@ -275,7 +276,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
             false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
     }
 
-    //ApiClient-ს, რომელსაც სხვა ჩანაწერი იყენებს (მაგალითად, DatabaseServerConnection), სერვერი არ შლის: 409 RecordIsInUse
+    //ApiClient-ს, რომელსაც სხვა ჩანაწერი იყენებს (DatabaseServerConnection, Server), სერვერი არ შლის: 409 RecordIsInUse
     public ValueTask<Result> DeleteApiClient(string key, int? version, CancellationToken cancellationToken = default)
     {
         return DeleteAsync(
@@ -316,6 +317,38 @@ public sealed class SupportToolsServerApiClient : ApiClient
     {
         return DeleteAsync(
             $"{SupportToolsServerApiRoutes.DatabaseServerConnections.Base}{SupportToolsServerApiRoutes.DatabaseServerConnections.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
+    //რეესტრი: სერვერები. ჩანაწერში საიდუმლო არ არის (FilesUserName სერვისის OS ანგარიშია, პაროლის გარეშე), ამიტომ
+    //განახლების ტანი შეცდომისას კონსოლზე იბეჭდება. სერვერის გადარქმევა წაშლა და ახლის შექმნაა
+    public Task<Result<List<StsServerDataModel>>> GetServers(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsServerDataModel>>(
+            $"{SupportToolsServerApiRoutes.Servers.Base}{SupportToolsServerApiRoutes.Servers.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsServerDataModel>> GetServer(string key, CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsServerDataModel>(
+            $"{SupportToolsServerApiRoutes.Servers.Base}/{Uri.EscapeDataString(key)}", false, cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateServer(string key, StsServerDataModel server,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(server);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.Servers.Base}{SupportToolsServerApiRoutes.Servers.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteServer(string key, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.Servers.Base}{SupportToolsServerApiRoutes.Servers.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
             cancellationToken);
     }
 

@@ -1,3 +1,4 @@
+using System.Linq;
 using SupportToolsServerApiContracts.Errors;
 using SystemTools.SharedKernel;
 using Xunit;
@@ -46,6 +47,35 @@ public sealed class SupportToolsServerApiClientErrorsTests
         Assert.Equal("ReferencedRecordsNotFound", error.Code);
         Assert.Equal("Referenced Runtime Records Not Found: linux-arm, osx-x64", error.Description);
         Assert.Equal(ErrorType.NotFound, error.Type);
+    }
+
+    //The types keep the order of the lookup, and each lists its names in their order
+    [Fact]
+    public void ReferencedRecordsNotFound_OfSeveralTypes_IsOneNotFoundErrorListingTheNamesOfEachType()
+    {
+        ILookup<string, string> names = new[]
+        {
+            (EntityName: "ApiClient", Name: "Pc2.WebAgent"), (EntityName: "Runtime", Name: "osx-x64"),
+            (EntityName: "ApiClient", Name: "Pc2.Installer")
+        }.ToLookup(x => x.EntityName, x => x.Name);
+
+        Error error = SupportToolsServerApiClientErrors.ReferencedRecordsNotFound(names);
+
+        Assert.Equal("ReferencedRecordsNotFound", error.Code);
+        Assert.Equal("Referenced ApiClient Records Not Found: Pc2.WebAgent, Pc2.Installer; " +
+                     "Referenced Runtime Records Not Found: osx-x64", error.Description);
+        Assert.Equal(ErrorType.NotFound, error.Type);
+    }
+
+    [Fact]
+    public void ReferencedRecordsNotFound_OfOneType_IsTheErrorOfThatType()
+    {
+        ILookup<string, string> names = new[] { "linux-arm", "osx-x64" }.ToLookup(_ => "Runtime");
+
+        Error error = SupportToolsServerApiClientErrors.ReferencedRecordsNotFound(names);
+
+        Assert.Equal(SupportToolsServerApiClientErrors.ReferencedRecordsNotFound("Runtime", ["linux-arm", "osx-x64"]),
+            error);
     }
 
     [Fact]

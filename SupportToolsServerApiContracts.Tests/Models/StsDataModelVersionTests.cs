@@ -331,4 +331,50 @@ public sealed class StsDataModelVersionTests
         Assert.Null(read.DatabaseFoldersSets[1].Backup);
         Assert.Equal(7, read.Version);
     }
+
+    //IsLocal of the client's ServerDataModel belongs to the machine: the contract has no such value and ignores it
+    [Fact]
+    public void StsServerDataModel_ReadsTheMissingOptionalValuesAsNullAndAMissingVersionAsZero()
+    {
+        var model = JsonConvert.DeserializeObject<StsServerDataModel>("""{"Name":"dl360","IsLocal":true}""")!;
+
+        Assert.Equal("dl360", model.Name);
+        Assert.Null(model.WebAgentName);
+        Assert.Null(model.WebAgentInstallerName);
+        Assert.Null(model.FilesUserName);
+        Assert.Null(model.FilesUsersGroupName);
+        Assert.Null(model.Runtime);
+        Assert.Null(model.ServerSideDownloadFolder);
+        Assert.Null(model.ServerSideDeployFolder);
+        Assert.Equal(0, model.Version);
+    }
+
+    [Fact]
+    public void StsServerDataModel_RoundTripsEveryValue()
+    {
+        var model = new StsServerDataModel
+        {
+            Name = "dl360",
+            WebAgentName = "Dl360.WebAgent",
+            WebAgentInstallerName = "Dl360.Installer",
+            FilesUserName = "deployer",
+            FilesUsersGroupName = "deployers",
+            Runtime = "linux-x64",
+            ServerSideDownloadFolder = "/home/deployer/Download",
+            ServerSideDeployFolder = "/opt/apps",
+            Version = 7
+        };
+
+        var read = JsonConvert.DeserializeObject<StsServerDataModel>(JsonConvert.SerializeObject(model))!;
+
+        Assert.Equal("dl360", read.Name);
+        Assert.Equal("Dl360.WebAgent", read.WebAgentName);
+        Assert.Equal("Dl360.Installer", read.WebAgentInstallerName);
+        Assert.Equal("deployer", read.FilesUserName);
+        Assert.Equal("deployers", read.FilesUsersGroupName);
+        Assert.Equal("linux-x64", read.Runtime);
+        Assert.Equal("/home/deployer/Download", read.ServerSideDownloadFolder);
+        Assert.Equal("/opt/apps", read.ServerSideDeployFolder);
+        Assert.Equal(7, read.Version);
+    }
 }
