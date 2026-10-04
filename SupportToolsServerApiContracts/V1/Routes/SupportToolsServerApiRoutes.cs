@@ -6,7 +6,7 @@ public static class SupportToolsServerApiRoutes
     private const string Version = "v1";
     public const string ApiBase = Root + "/" + Version;
 
-    //რეესტრის არეალი (SupportToolsServer-ის CLAUDE.md, Registry conventions). სერვერი group-ს ApiBase + Base-ზე
+    //რეესტრის არეალები (SupportToolsServer-ის CLAUDE.md, Registry conventions). სერვერი group-ს ApiBase + Base-ზე
     //map-ავს, კლიენტი კი key-ს Uri.EscapeDataString-ით უმატებს Base-ს ან …Prefix-ს
     public static class Environments
     {
@@ -23,6 +23,82 @@ public static class SupportToolsServerApiRoutes
         public const string Update = UpdatePrefix + "/{key}";
 
         // DELETE api/v1/environments/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
+    public static class Runtimes
+    {
+        public const string Base = "/runtimes";
+
+        // GET api/v1/runtimes
+        public const string List = "";
+
+        // GET api/v1/runtimes/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/runtimes/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/runtimes/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
+    public static class NpmPackages
+    {
+        public const string Base = "/npmpackages";
+
+        // GET api/v1/npmpackages
+        public const string List = "";
+
+        // GET api/v1/npmpackages/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/npmpackages/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/npmpackages/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
+    public static class ReactAppTemplates
+    {
+        public const string Base = "/reactapptemplates";
+
+        // GET api/v1/reactapptemplates
+        public const string List = "";
+
+        // GET api/v1/reactapptemplates/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/reactapptemplates/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/reactapptemplates/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
+    public static class DotnetTools
+    {
+        public const string Base = "/dotnettools";
+
+        // GET api/v1/dotnettools
+        public const string List = "";
+
+        // GET api/v1/dotnettools/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/dotnettools/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/dotnettools/delete/{key}?version=N
         public const string DeletePrefix = "/delete";
         public const string Delete = DeletePrefix + "/{key}";
     }

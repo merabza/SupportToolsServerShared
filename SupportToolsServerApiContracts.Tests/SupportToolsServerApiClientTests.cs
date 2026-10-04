@@ -461,4 +461,345 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("RecordIsInUse", result.Error.Code);
         Assert.Equal(ErrorType.Conflict, result.Error.Type);
     }
+
+    [Fact]
+    public async Task GetRuntimes_GetsTheListWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"linux-x64","description":null,"version":1},{"name":"win-x64","description":"Windows x64","version":3}]""");
+
+        (Result<List<StsRuntimeDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetRuntimes());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/runtimes", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        Assert.Null(result.Value[0].Description);
+        Assert.Equal("win-x64", result.Value[1].Name);
+        Assert.Equal("Windows x64", result.Value[1].Description);
+        Assert.Equal(3, result.Value[1].Version);
+    }
+
+    [Fact]
+    public async Task GetRuntime_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"win x64/1","description":"Windows x64","version":2}""");
+
+        (Result<StsRuntimeDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetRuntime("win x64/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/runtimes/win%20x64%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("Windows x64", result.Value.Description);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateRuntime_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var runtime = new StsRuntimeDataModel { Name = "win x64/1", Description = "Windows x64", Version = 3 };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateRuntime("win x64/1", runtime));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/runtimes/update/win%20x64%2F1", handler.LastRequestUri!.AbsolutePath);
+        StsRuntimeDataModel sent = JsonConvert.DeserializeObject<StsRuntimeDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("win x64/1", sent.Name);
+        Assert.Equal("Windows x64", sent.Description);
+        Assert.Equal(3, sent.Version);
+    }
+
+    [Fact]
+    public async Task DeleteRuntime_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteRuntime("win x64/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/runtimes/delete/win%20x64%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteRuntime_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) = await CaptureConsole(async () => await CreateClient(handler).DeleteRuntime("win-x64", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/runtimes/delete/win-x64", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task GetNpmPackages_GetsTheListWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"@reduxjs/toolkit","description":null,"version":1},{"name":"yup","description":"Schema validation","version":3}]""");
+
+        (Result<List<StsNpmPackageDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetNpmPackages());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/npmpackages", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        Assert.Equal("@reduxjs/toolkit", result.Value[0].Name);
+        Assert.Null(result.Value[0].Description);
+        Assert.Equal("Schema validation", result.Value[1].Description);
+        Assert.Equal(3, result.Value[1].Version);
+    }
+
+    //A scoped package name holds a slash
+    [Fact]
+    public async Task GetNpmPackage_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"@reduxjs/toolkit","description":"Redux toolset","version":2}""");
+
+        (Result<StsNpmPackageDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetNpmPackage("@reduxjs/toolkit"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/npmpackages/%40reduxjs%2Ftoolkit", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("Redux toolset", result.Value.Description);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateNpmPackage_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var npmPackage = new StsNpmPackageDataModel { Name = "@reduxjs/toolkit", Description = "Redux", Version = 3 };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateNpmPackage("@reduxjs/toolkit", npmPackage));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/npmpackages/update/%40reduxjs%2Ftoolkit", handler.LastRequestUri!.AbsolutePath);
+        StsNpmPackageDataModel sent = JsonConvert.DeserializeObject<StsNpmPackageDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("@reduxjs/toolkit", sent.Name);
+        Assert.Equal("Redux", sent.Description);
+        Assert.Equal(3, sent.Version);
+    }
+
+    [Fact]
+    public async Task DeleteNpmPackage_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteNpmPackage("@reduxjs/toolkit", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/npmpackages/delete/%40reduxjs%2Ftoolkit", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteNpmPackage_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) = await CaptureConsole(async () => await CreateClient(handler).DeleteNpmPackage("yup", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/npmpackages/delete/yup", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task GetReactAppTemplates_GetsTheListWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"ReduxApp","template":"redux-typescript","version":1},{"name":"TypeScriptApp","template":"typescript","version":3}]""");
+
+        (Result<List<StsReactAppTemplateDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetReactAppTemplates());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/reactapptemplates", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        Assert.Equal("redux-typescript", result.Value[0].Template);
+        Assert.Equal("TypeScriptApp", result.Value[1].Name);
+        Assert.Equal(3, result.Value[1].Version);
+    }
+
+    [Fact]
+    public async Task GetReactAppTemplate_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"Redux App/1","template":"redux-typescript","version":2}""");
+
+        (Result<StsReactAppTemplateDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetReactAppTemplate("Redux App/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/reactapptemplates/Redux%20App%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("redux-typescript", result.Value.Template);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateReactAppTemplate_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var reactAppTemplate =
+            new StsReactAppTemplateDataModel { Name = "Redux App/1", Template = "redux-typescript", Version = 3 };
+
+        (Result<int> result, string output) = await CaptureConsole(() =>
+            CreateClient(handler).UpdateReactAppTemplate("Redux App/1", reactAppTemplate));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/reactapptemplates/update/Redux%20App%2F1", handler.LastRequestUri!.AbsolutePath);
+        StsReactAppTemplateDataModel sent =
+            JsonConvert.DeserializeObject<StsReactAppTemplateDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("Redux App/1", sent.Name);
+        Assert.Equal("redux-typescript", sent.Template);
+        Assert.Equal(3, sent.Version);
+    }
+
+    [Fact]
+    public async Task DeleteReactAppTemplate_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteReactAppTemplate("Redux App/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/reactapptemplates/delete/Redux%20App%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteReactAppTemplate_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteReactAppTemplate("ReduxApp", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/reactapptemplates/delete/ReduxApp", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task GetDotnetTools_GetsTheListWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"DotnetEf","packageId":"dotnet-ef","maxVersion":null,"description":null,"version":1},{"name":"Stryker","packageId":"dotnet-stryker","maxVersion":"5.0.0","description":"mutation testing","version":3}]""");
+
+        (Result<List<StsDotnetToolDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetDotnetTools());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/dotnettools", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        Assert.Equal("dotnet-ef", result.Value[0].PackageId);
+        Assert.Null(result.Value[0].MaxVersion);
+        Assert.Null(result.Value[0].Description);
+        Assert.Equal("Stryker", result.Value[1].Name);
+        Assert.Equal("5.0.0", result.Value[1].MaxVersion);
+        Assert.Equal("mutation testing", result.Value[1].Description);
+        Assert.Equal(3, result.Value[1].Version);
+    }
+
+    [Fact]
+    public async Task GetDotnetTool_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"Dotnet Ef/1","packageId":"dotnet-ef","maxVersion":"9.0.8","description":"Entity Framework","version":2}""");
+
+        (Result<StsDotnetToolDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetDotnetTool("Dotnet Ef/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/dotnettools/Dotnet%20Ef%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("dotnet-ef", result.Value.PackageId);
+        Assert.Equal("9.0.8", result.Value.MaxVersion);
+        Assert.Equal("Entity Framework", result.Value.Description);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateDotnetTool_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var dotnetTool = new StsDotnetToolDataModel
+        {
+            Name = "Dotnet Ef/1",
+            PackageId = "dotnet-ef",
+            MaxVersion = "9.0.8",
+            Description = "Entity Framework",
+            Version = 3
+        };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateDotnetTool("Dotnet Ef/1", dotnetTool));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/dotnettools/update/Dotnet%20Ef%2F1", handler.LastRequestUri!.AbsolutePath);
+        StsDotnetToolDataModel sent = JsonConvert.DeserializeObject<StsDotnetToolDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("Dotnet Ef/1", sent.Name);
+        Assert.Equal("dotnet-ef", sent.PackageId);
+        Assert.Equal("9.0.8", sent.MaxVersion);
+        Assert.Equal("Entity Framework", sent.Description);
+        Assert.Equal(3, sent.Version);
+    }
+
+    [Fact]
+    public async Task DeleteDotnetTool_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteDotnetTool("Dotnet Ef/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/dotnettools/delete/Dotnet%20Ef%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteDotnetTool_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) = await CaptureConsole(async () => await CreateClient(handler).DeleteDotnetTool("Stryker", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/dotnettools/delete/Stryker", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
 }

@@ -58,6 +58,135 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
+    //რეესტრი: Runtime-ები (RID). მეთოდები გარემოების მეთოდებივით მუშაობს
+    public Task<Result<List<StsRuntimeDataModel>>> GetRuntimes(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsRuntimeDataModel>>(
+            $"{SupportToolsServerApiRoutes.Runtimes.Base}{SupportToolsServerApiRoutes.Runtimes.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsRuntimeDataModel>> GetRuntime(string key, CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsRuntimeDataModel>(
+            $"{SupportToolsServerApiRoutes.Runtimes.Base}/{Uri.EscapeDataString(key)}", false, cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateRuntime(string key, StsRuntimeDataModel runtime,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(runtime);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.Runtimes.Base}{SupportToolsServerApiRoutes.Runtimes.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteRuntime(string key, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.Runtimes.Base}{SupportToolsServerApiRoutes.Runtimes.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
+    //რეესტრი: npm-ის პაკეტები. scoped პაკეტის სახელში (@scope/name) / წერია, key-ს escape ამიტომაც სჭირდება
+    public Task<Result<List<StsNpmPackageDataModel>>> GetNpmPackages(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsNpmPackageDataModel>>(
+            $"{SupportToolsServerApiRoutes.NpmPackages.Base}{SupportToolsServerApiRoutes.NpmPackages.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsNpmPackageDataModel>> GetNpmPackage(string key, CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsNpmPackageDataModel>(
+            $"{SupportToolsServerApiRoutes.NpmPackages.Base}/{Uri.EscapeDataString(key)}", false, cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateNpmPackage(string key, StsNpmPackageDataModel npmPackage,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(npmPackage);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.NpmPackages.Base}{SupportToolsServerApiRoutes.NpmPackages.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteNpmPackage(string key, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.NpmPackages.Base}{SupportToolsServerApiRoutes.NpmPackages.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
+    //რეესტრი: React აპლიკაციების შაბლონები
+    public Task<Result<List<StsReactAppTemplateDataModel>>> GetReactAppTemplates(
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsReactAppTemplateDataModel>>(
+            $"{SupportToolsServerApiRoutes.ReactAppTemplates.Base}{SupportToolsServerApiRoutes.ReactAppTemplates.List}",
+            false, cancellationToken);
+    }
+
+    public Task<Result<StsReactAppTemplateDataModel>> GetReactAppTemplate(string key,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsReactAppTemplateDataModel>(
+            $"{SupportToolsServerApiRoutes.ReactAppTemplates.Base}/{Uri.EscapeDataString(key)}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateReactAppTemplate(string key, StsReactAppTemplateDataModel reactAppTemplate,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(reactAppTemplate);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.ReactAppTemplates.Base}{SupportToolsServerApiRoutes.ReactAppTemplates.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteReactAppTemplate(string key, int? version,
+        CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.ReactAppTemplates.Base}{SupportToolsServerApiRoutes.ReactAppTemplates.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
+    //რეესტრი: dotnet-ის ხელსაწყოები, მხოლოდ საერთო ველებით (InstalledVersion, LatestVersion და CommandName
+    //კომპიუტერისაა)
+    public Task<Result<List<StsDotnetToolDataModel>>> GetDotnetTools(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsDotnetToolDataModel>>(
+            $"{SupportToolsServerApiRoutes.DotnetTools.Base}{SupportToolsServerApiRoutes.DotnetTools.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsDotnetToolDataModel>> GetDotnetTool(string key, CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsDotnetToolDataModel>(
+            $"{SupportToolsServerApiRoutes.DotnetTools.Base}/{Uri.EscapeDataString(key)}", false, cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateDotnetTool(string key, StsDotnetToolDataModel dotnetTool,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(dotnetTool);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.DotnetTools.Base}{SupportToolsServerApiRoutes.DotnetTools.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteDotnetTool(string key, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.DotnetTools.Base}{SupportToolsServerApiRoutes.DotnetTools.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
     private static string VersionQuery(int? version)
     {
         return version is null ? string.Empty : $"?version={version.Value.ToString(CultureInfo.InvariantCulture)}";
