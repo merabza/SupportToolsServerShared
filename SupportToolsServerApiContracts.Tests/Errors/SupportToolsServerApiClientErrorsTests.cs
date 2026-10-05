@@ -29,6 +29,36 @@ public sealed class SupportToolsServerApiClientErrorsTests
         Assert.Equal(ErrorType.Conflict, error.Type);
     }
 
+    //The records keep the order of the lookup, and each lists its users in their order
+    [Fact]
+    public void RecordIsInUse_OfSeveralRecords_IsOneConflictListingTheUsagesOfEachRecord()
+    {
+        ILookup<string, string> usages = new[]
+        {
+            (Name: "default", Usage: "Project AppA"), (Name: "strict", Usage: "Project AppC"),
+            (Name: "default", Usage: "Project AppB")
+        }.ToLookup(x => x.Name, x => x.Usage);
+
+        Error error = SupportToolsServerApiClientErrors.RecordIsInUse("EditorConfigFileType", usages);
+
+        Assert.Equal("RecordIsInUse", error.Code);
+        Assert.Equal("EditorConfigFileType default Is Used By: Project AppA, Project AppB; " +
+                     "EditorConfigFileType strict Is Used By: Project AppC", error.Description);
+        Assert.Equal(ErrorType.Conflict, error.Type);
+    }
+
+    [Fact]
+    public void RecordIsInUse_OfOneRecord_IsTheErrorOfThatRecord()
+    {
+        ILookup<string, string> usages = new[] { "Project AppA", "Project AppB" }.ToLookup(_ => "default");
+
+        Error error = SupportToolsServerApiClientErrors.RecordIsInUse("EditorConfigFileType", usages);
+
+        Assert.Equal(
+            SupportToolsServerApiClientErrors.RecordIsInUse("EditorConfigFileType", "default",
+                ["Project AppA", "Project AppB"]), error);
+    }
+
     [Fact]
     public void ConcurrencyConflict_IsAConflictNamingTheExpectedAndTheActualVersion()
     {

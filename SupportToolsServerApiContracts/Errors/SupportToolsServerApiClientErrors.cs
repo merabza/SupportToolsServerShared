@@ -19,6 +19,15 @@ public static class SupportToolsServerApiClientErrors
         return Error.Conflict(nameof(RecordIsInUse), $"{entityName} {name} Is Used By: {string.Join(", ", usages)}");
     }
 
+    //ერთი ტიპის რამდენიმე ჩანაწერი, რომლებსაც სხვა აგრეგატები მიმართავს (მაგალითად, SyncUp-ის merge=false-ით წასაშლელი
+    //.editorconfig შაბლონები). მომხმარებლები ჩანაწერის სახელითაა დაჯგუფებული. თითო ჩანაწერის ტექსტი ზემოთა მეთოდისაა და
+    //ჩანაწერები "; "-ით გამოიყოფა, ამიტომ ერთი ჩანაწერისას შეცდომა ზემოთა მეთოდის შეცდომას ემთხვევა
+    public static Error RecordIsInUse(string entityName, ILookup<string, string> usagesByName)
+    {
+        return Error.Conflict(nameof(RecordIsInUse),
+            string.Join("; ", usagesByName.Select(x => RecordIsInUse(entityName, x.Key, x).Description)));
+    }
+
     //upsert-ის ან წაშლის მოსალოდნელი ვერსია სერვერზე შენახულს არ ემთხვევა. 0 ნიშნავს, რომ ჩანაწერი არ უნდა არსებობდეს
     public static Error ConcurrencyConflict(string entityName, string name, int expectedVersion, int actualVersion)
     {

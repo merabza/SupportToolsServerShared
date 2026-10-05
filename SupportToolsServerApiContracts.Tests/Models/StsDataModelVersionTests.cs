@@ -556,4 +556,135 @@ public sealed class StsDataModelVersionTests
         Assert.Equal("redux-typescript", read.ReactTemplateName);
         Assert.Equal(7, read.Version);
     }
+
+    //ServerInfos of the client's ProjectModel are not part of the contract yet (B7), so they are ignored
+    [Fact]
+    public void StsProjectDataModel_ReadsTheMissingValuesAsDefaultsAndAMissingVersionAsZero()
+    {
+        var model = JsonConvert.DeserializeObject<StsProjectDataModel>(
+            """{"Name":"AppA","ProjectType":"Standard","ServerInfos":{"PAZISI|Prod":{"ServerName":"PAZISI"}}}""")!;
+
+        Assert.Equal("AppA", model.Name);
+        Assert.Equal("Standard", model.ProjectType);
+        Assert.Null(model.ProjectGroupName);
+        Assert.Equal(0, model.MajorVersion);
+        Assert.False(model.UseAlternativeWebAgent);
+        Assert.Null(model.EditorConfigPatternName);
+        Assert.Null(model.MainProjectName);
+        Assert.Null(model.ProgramArchiveDateMask);
+        Assert.Null(model.SolutionFileName);
+        Assert.Null(model.KeyGuidPart);
+        Assert.Null(model.DevDatabaseParameters);
+        Assert.Null(model.ProdCopyDatabaseParameters);
+        Assert.Empty(model.GitProjectNames);
+        Assert.Empty(model.ScaffoldSeederGitProjectNames);
+        Assert.Empty(model.FrontNpmPackageNames);
+        Assert.Empty(model.RedundantFileNames);
+        Assert.Empty(model.AllowToolsList);
+        Assert.Empty(model.Endpoints);
+        Assert.Empty(model.RouteClasses);
+        Assert.Equal(0, model.Version);
+    }
+
+    [Fact]
+    public void StsProjectDataModel_RoundTripsEveryValueWithTheDatabaseParametersAndTheListsInTheirOrder()
+    {
+        var model = new StsProjectDataModel
+        {
+            Name = "AppA",
+            ProjectType = "IsService",
+            ProjectGroupName = "Apps",
+            ProjectDescription = "Application A",
+            MajorVersion = 2,
+            MinorVersion = 5,
+            UseAlternativeWebAgent = true,
+            EditorConfigPatternName = "default",
+            MainProjectName = "AppA",
+            ApiContractsProjectName = "AppAApiContracts",
+            SpaProjectName = "appa.client",
+            DbContextName = "AppADbContext",
+            ProjectShortPrefix = "aa",
+            ScaffoldSeederProjectName = "AppASeeder",
+            DbContextProjectName = "AppADb",
+            NewDataSeedingClassLibProjectName = "AppANewDataSeeding",
+            ProgramArchiveDateMask = "yyyyMMddHHmmss",
+            ProgramArchiveExtension = ".zip",
+            ParametersFileDateMask = "yyyyMMdd",
+            ParametersFileExtension = ".json",
+            ProjectFolderName = @"D:\1WorkDotnet\AppA",
+            SolutionFileName = @"D:\1WorkDotnet\AppA\AppA.slnx",
+            ProjectSecurityFolderPath = @"D:\1WorkSecurity\AppA",
+            MigrationStartupProjectFilePath = @"D:\1WorkDotnet\AppA\Startup.csproj",
+            MigrationProjectFilePath = @"D:\1WorkDotnet\AppA\Migration.csproj",
+            DataSeederRulesByTableStartupProjectFilePath = @"D:\1WorkDotnet\AppA\Rules.csproj",
+            OldDataConvertorForDataSeeder = @"D:\1WorkDotnet\AppA\Convertor.csproj",
+            SeedProjectFilePath = @"D:\1WorkDotnet\AppA\Seed.csproj",
+            SeedProjectParametersFilePath = @"D:\1WorkSecurity\AppA\Seed.json",
+            ExcludesRulesParametersFilePath = @"D:\1WorkSecurity\AppA\Excludes.json",
+            AppSetEnKeysJsonFileName = @"D:\1WorkSecurity\AppA\Keys.json",
+            MigrationSqlFilesFolder = @"D:\1WorkDotnet\AppA\Sql",
+            PrepareProdCopyDatabaseProjectFilePath = @"D:\1WorkDotnet\AppA\Prepare.csproj",
+            PrepareProdCopyDatabaseProjectParametersFilePath = @"D:\1WorkSecurity\AppA\Prepare.json",
+            PairedDbObjectsResultFileName = @"D:\1WorkSecurity\AppA\Paired.json",
+            KeyGuidPart = "made-up-key-guid-part",
+            DevDatabaseParameters = new StsDatabaseParametersDataModel
+            {
+                DbConnectionName = "Pc1.Sql",
+                DatabaseRecoveryModel = "Simple",
+                DbServerFoldersSetName = "Default",
+                DatabaseName = "AppADev",
+                SmartSchemaName = "Reduce",
+                FileStorageName = "Backups",
+                CommandTimeOut = 120,
+                SkipBackupBeforeRestore = true,
+                BackupNamePrefix = "dev",
+                DateMask = "yyyyMMdd",
+                BackupFileExtension = ".bak",
+                BackupNameMiddlePart = "_FullDb_",
+                Compress = true,
+                Verify = false,
+                BackupType = "Full"
+            },
+            GitProjectNames = ["AppA", "AppAShared"],
+            ScaffoldSeederGitProjectNames = ["AppADbPart"],
+            FrontNpmPackageNames = ["react-redux", "@reduxjs/toolkit"],
+            RedundantFileNames = ["*.pdb", "web.config"],
+            AllowToolsList = ["SeedData", "GenerateApiRoutes"],
+            Endpoints =
+            [
+                new StsProjectEndpointDataModel
+                {
+                    Name = "Upload",
+                    EndpointName = "UploadGitRepos",
+                    EndpointRoute = "/uploadgitrepos",
+                    RequireAuthorization = true,
+                    HttpMethod = "Post",
+                    EndpointType = "Command",
+                    ReturnType = "int",
+                    SendMessageToCurrentUser = true
+                }
+            ],
+            RouteClasses =
+            [
+                new StsProjectRouteClassDataModel { Name = "Git", Root = "api", ApiVersion = "v1", Base = "/git" }
+            ],
+            Version = 7
+        };
+
+        var read = JsonConvert.DeserializeObject<StsProjectDataModel>(JsonConvert.SerializeObject(model))!;
+
+        Assert.Equal(JsonConvert.SerializeObject(model), JsonConvert.SerializeObject(read));
+        Assert.Equal("AppA", read.Name);
+        Assert.Equal("IsService", read.ProjectType);
+        Assert.Equal(@"D:\1WorkDotnet\AppA\AppA.slnx", read.SolutionFileName);
+        Assert.Equal("made-up-key-guid-part", read.KeyGuidPart);
+        Assert.Equal("Pc1.Sql", read.DevDatabaseParameters!.DbConnectionName);
+        Assert.Equal(120, read.DevDatabaseParameters.CommandTimeOut);
+        Assert.False(read.DevDatabaseParameters.Verify);
+        Assert.Null(read.ProdCopyDatabaseParameters);
+        Assert.Equal(["react-redux", "@reduxjs/toolkit"], read.FrontNpmPackageNames);
+        Assert.Equal("Post", Assert.Single(read.Endpoints).HttpMethod);
+        Assert.Equal("v1", Assert.Single(read.RouteClasses).ApiVersion);
+        Assert.Equal(7, read.Version);
+    }
 }

@@ -1735,4 +1735,153 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("/api/v1/projecttemplates/delete/Console", handler.LastRequestUri!.AbsolutePath);
         Assert.Equal(string.Empty, handler.LastRequestUri.Query);
     }
+
+    [Fact]
+    public async Task GetProjects_GetsTheAggregatesWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"AppA","projectType":"IsService","editorConfigPatternName":"default","solutionFileName":"D:\\1WorkDotnet\\AppA\\AppA.slnx","keyGuidPart":"made-up-key","devDatabaseParameters":{"dbConnectionName":"Pc1.Sql","databaseName":"AppADev","commandTimeOut":120,"compress":true},"prodCopyDatabaseParameters":null,"gitProjectNames":["AppA","AppAShared"],"scaffoldSeederGitProjectNames":["AppADbPart"],"frontNpmPackageNames":["react-redux"],"redundantFileNames":["*.pdb"],"allowToolsList":["SeedData"],"endpoints":[{"name":"Upload","endpointRoute":"/upload","httpMethod":"Post","endpointType":"Command"}],"routeClasses":[{"name":"Git","root":"api","apiVersion":"v1","base":"/git"}],"version":3},{"name":"AppB","projectType":"Standard","version":1}]""");
+
+        (Result<List<StsProjectDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetProjects());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/projects", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        StsProjectDataModel first = result.Value[0];
+        Assert.Equal("IsService", first.ProjectType);
+        Assert.Equal("default", first.EditorConfigPatternName);
+        Assert.Equal(@"D:\1WorkDotnet\AppA\AppA.slnx", first.SolutionFileName);
+        Assert.Equal("made-up-key", first.KeyGuidPart);
+        Assert.Equal("Pc1.Sql", first.DevDatabaseParameters!.DbConnectionName);
+        Assert.Equal("AppADev", first.DevDatabaseParameters.DatabaseName);
+        Assert.Equal(120, first.DevDatabaseParameters.CommandTimeOut);
+        Assert.True(first.DevDatabaseParameters.Compress);
+        Assert.Null(first.ProdCopyDatabaseParameters);
+        Assert.Equal(["AppA", "AppAShared"], first.GitProjectNames);
+        Assert.Equal(["AppADbPart"], first.ScaffoldSeederGitProjectNames);
+        Assert.Equal(["react-redux"], first.FrontNpmPackageNames);
+        Assert.Equal(["*.pdb"], first.RedundantFileNames);
+        Assert.Equal(["SeedData"], first.AllowToolsList);
+        Assert.Equal("/upload", Assert.Single(first.Endpoints).EndpointRoute);
+        Assert.Equal("v1", Assert.Single(first.RouteClasses).ApiVersion);
+        Assert.Equal(3, first.Version);
+        Assert.Null(result.Value[1].DevDatabaseParameters);
+        Assert.Empty(result.Value[1].GitProjectNames);
+    }
+
+    [Fact]
+    public async Task GetProject_GetsTheAggregateOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"App A/1","projectType":"Standard","version":2}""");
+
+        (Result<StsProjectDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetProject("App A/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/projects/App%20A%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("Standard", result.Value.ProjectType);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateProject_PostsTheAggregateToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var project = new StsProjectDataModel
+        {
+            Name = "App A/1",
+            ProjectType = "IsService",
+            KeyGuidPart = "made-up-key",
+            ProdCopyDatabaseParameters = new StsDatabaseParametersDataModel
+            {
+                DbConnectionName = "Pc1.Sql", CommandTimeOut = 60
+            },
+            GitProjectNames = ["AppA"],
+            Endpoints = [new StsProjectEndpointDataModel { Name = "Get", HttpMethod = "Get", EndpointType = "Query" }],
+            Version = 3
+        };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateProject("App A/1", project));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/projects/update/App%20A%2F1", handler.LastRequestUri!.AbsolutePath);
+        StsProjectDataModel sent = JsonConvert.DeserializeObject<StsProjectDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("App A/1", sent.Name);
+        Assert.Equal("IsService", sent.ProjectType);
+        Assert.Equal("made-up-key", sent.KeyGuidPart);
+        Assert.Null(sent.DevDatabaseParameters);
+        Assert.Equal("Pc1.Sql", sent.ProdCopyDatabaseParameters!.DbConnectionName);
+        Assert.Equal(60, sent.ProdCopyDatabaseParameters.CommandTimeOut);
+        Assert.Equal(["AppA"], sent.GitProjectNames);
+        Assert.Equal("Query", Assert.Single(sent.Endpoints).EndpointType);
+        Assert.Equal(3, sent.Version);
+    }
+
+    //The body holds the key part of the encryption key, so the console of a failed request leaves it out
+    [Fact]
+    public async Task UpdateProject_DoesNotWriteTheSecretsOfAFailedRequestToTheConsole()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("Project");
+
+        (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
+            .UpdateProject("A",
+                new StsProjectDataModel
+                {
+                    Name = "A", ProjectType = "Standard", KeyGuidPart = "made-up-key", Version = 1
+                }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Contains("409 Conflict", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("request body was", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("made-up", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DeleteProject_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteProject("App A/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/projects/delete/App%20A%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteProject_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) = await CaptureConsole(async () => await CreateClient(handler).DeleteProject("AppA", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/projects/delete/AppA", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
+
+    //The delete of a git that a project uses returns the users of the record
+    [Fact]
+    public async Task RemoveGitRepoByKey_ReturnsTheUsages_WhenAProjectUsesTheGit()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.Conflict,
+            """{"title":"RecordIsInUse","status":409,"detail":"GitRepo RepoA Is Used By: Project AppA, Project AppB"}""",
+            "application/problem+json");
+
+        (Result result, _) = await CaptureConsole(async () => await CreateClient(handler).RemoveGitRepoByKey("RepoA"));
+
+        Assert.Equal("RecordIsInUse", result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+        Assert.Equal("GitRepo RepoA Is Used By: Project AppA, Project AppB", result.Error.Description);
+    }
 }

@@ -429,6 +429,39 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
+    //რეესტრი: პროექტები, ბაზის პარამეტრებითა და შვილი სიებით, ერთ აგრეგატად. ჩანაწერში KeyGuidPart-ია, ამიტომ განახლების
+    //ტანი შეცდომისას კონსოლზე არ იბეჭდება
+    public Task<Result<List<StsProjectDataModel>>> GetProjects(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsProjectDataModel>>(
+            $"{SupportToolsServerApiRoutes.Projects.Base}{SupportToolsServerApiRoutes.Projects.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsProjectDataModel>> GetProject(string key, CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsProjectDataModel>(
+            $"{SupportToolsServerApiRoutes.Projects.Base}/{Uri.EscapeDataString(key)}", false, cancellationToken);
+    }
+
+    //upsert: project.Version მოსალოდნელი ვერსიაა (0 — შექმნა). წარმატებისას ბრუნდება ახალი ვერსია
+    public Task<Result<int>> UpdateProject(string key, StsProjectDataModel project,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(project);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.Projects.Base}{SupportToolsServerApiRoutes.Projects.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteProject(string key, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.Projects.Base}{SupportToolsServerApiRoutes.Projects.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
     private static string VersionQuery(int? version)
     {
         return version is null ? string.Empty : $"?version={version.Value.ToString(CultureInfo.InvariantCulture)}";

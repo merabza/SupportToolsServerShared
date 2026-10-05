@@ -243,6 +243,26 @@ public static class SupportToolsServerApiRoutes
         public const string Delete = DeletePrefix + "/{key}";
     }
 
+    //პროექტები: აგრეგატი შვილებითა და ბაზის პარამეტრებით. GET-ის სიაც სრულ აგრეგატებს აბრუნებს
+    public static class Projects
+    {
+        public const string Base = "/projects";
+
+        // GET api/v1/projects
+        public const string List = "";
+
+        // GET api/v1/projects/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/projects/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/projects/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
     public static class Git
     {
         public const string GitBase = "/git";
