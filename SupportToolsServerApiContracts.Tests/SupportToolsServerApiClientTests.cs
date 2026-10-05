@@ -1449,4 +1449,290 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("/api/v1/servers/delete/dl360", handler.LastRequestUri!.AbsolutePath);
         Assert.Equal(string.Empty, handler.LastRequestUri.Query);
     }
+
+    [Fact]
+    public async Task GetGlobalSettings_GetsTheSingletonWithTheExchangeParametersWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"serviceDescriptionSignature":"ltgmz","uploadTempExtension":".up!","programArchiveDateMask":"yyyyMMddHHmmss","programArchiveExtension":".zip","parametersFileDateMask":"yyyyMMdd","parametersFileExtension":".json","mediatRLicenseKey":"made-up-license-key","fileStorageNameForExchange":"Exchange","smartSchemaNameForExchange":"Reduce","smartSchemaNameForLocal":"Keep","localPackageManagerWebApiClientName":"packages.example.com","databasesBackupFilesExchange":{"downloadTempExtension":".down!","uploadTempExtension":".up!","exchangeFileStorageName":"Backups","exchangeSmartSchemaName":"Reduce","localSmartSchemaName":"Keep"},"version":3}""");
+
+        (Result<StsGlobalSettingsDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetGlobalSettings());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/settings/global", handler.LastRequestUri!.AbsolutePath);
+        StsGlobalSettingsDataModel globalSettings = result.Value;
+        Assert.Equal("ltgmz", globalSettings.ServiceDescriptionSignature);
+        Assert.Equal(".up!", globalSettings.UploadTempExtension);
+        Assert.Equal("yyyyMMddHHmmss", globalSettings.ProgramArchiveDateMask);
+        Assert.Equal(".zip", globalSettings.ProgramArchiveExtension);
+        Assert.Equal("yyyyMMdd", globalSettings.ParametersFileDateMask);
+        Assert.Equal(".json", globalSettings.ParametersFileExtension);
+        Assert.Equal("made-up-license-key", globalSettings.MediatRLicenseKey);
+        Assert.Equal("Exchange", globalSettings.FileStorageNameForExchange);
+        Assert.Equal("Reduce", globalSettings.SmartSchemaNameForExchange);
+        Assert.Equal("Keep", globalSettings.SmartSchemaNameForLocal);
+        Assert.Equal("packages.example.com", globalSettings.LocalPackageManagerWebApiClientName);
+        Assert.Equal(".down!", globalSettings.DatabasesBackupFilesExchange.DownloadTempExtension);
+        Assert.Equal(".up!", globalSettings.DatabasesBackupFilesExchange.UploadTempExtension);
+        Assert.Equal("Backups", globalSettings.DatabasesBackupFilesExchange.ExchangeFileStorageName);
+        Assert.Equal("Reduce", globalSettings.DatabasesBackupFilesExchange.ExchangeSmartSchemaName);
+        Assert.Equal("Keep", globalSettings.DatabasesBackupFilesExchange.LocalSmartSchemaName);
+        Assert.Equal(3, globalSettings.Version);
+    }
+
+    //Before the singleton is created the server returns an empty contract with version 0, not an error
+    [Fact]
+    public async Task GetGlobalSettings_ReadsTheEmptyContractOfTheSingletonThatIsNotCreatedYet()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"databasesBackupFilesExchange":{},"version":0}""");
+
+        (Result<StsGlobalSettingsDataModel> result, string output) =
+            await CaptureConsole(() => CreateConsoleClient(handler).GetGlobalSettings());
+
+        Assert.Equal(string.Empty, output);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(0, result.Value.Version);
+        Assert.Null(result.Value.ServiceDescriptionSignature);
+        Assert.Null(result.Value.DatabasesBackupFilesExchange.ExchangeFileStorageName);
+    }
+
+    [Fact]
+    public async Task UpdateGlobalSettings_PostsTheRecordAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var globalSettings = new StsGlobalSettingsDataModel
+        {
+            ServiceDescriptionSignature = "ltgmz",
+            MediatRLicenseKey = "made-up-license-key",
+            FileStorageNameForExchange = "Exchange",
+            DatabasesBackupFilesExchange = new StsDatabasesBackupFilesExchangeDataModel
+            {
+                DownloadTempExtension = ".down!", LocalSmartSchemaName = "Keep"
+            },
+            Version = 3
+        };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateGlobalSettings(globalSettings));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/settings/global/update", handler.LastRequestUri!.AbsolutePath);
+        StsGlobalSettingsDataModel sent =
+            JsonConvert.DeserializeObject<StsGlobalSettingsDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("ltgmz", sent.ServiceDescriptionSignature);
+        Assert.Equal("made-up-license-key", sent.MediatRLicenseKey);
+        Assert.Equal("Exchange", sent.FileStorageNameForExchange);
+        Assert.Equal(".down!", sent.DatabasesBackupFilesExchange.DownloadTempExtension);
+        Assert.Equal("Keep", sent.DatabasesBackupFilesExchange.LocalSmartSchemaName);
+        Assert.Equal(3, sent.Version);
+    }
+
+    //The body holds the MediatR license key, so the console of a failed request leaves it out
+    [Fact]
+    public async Task UpdateGlobalSettings_DoesNotWriteTheSecretsOfAFailedRequestToTheConsole()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("Settings");
+
+        (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
+            .UpdateGlobalSettings(new StsGlobalSettingsDataModel
+            {
+                MediatRLicenseKey = "made-up-license-key", Version = 1
+            }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Contains("409 Conflict", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("request body was", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("made-up", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetProjectCreatorSettings_GetsTheSingletonWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"indentSize":4,"fakeHostProjectName":"FakeHost","projectsFolderPathReal":"D:\\1WorkDotnet","secretsFolderPathReal":"D:\\1WorkSecurity","productionServerName":"dl360","productionEnvironmentName":"Prod","developerDbConnectionName":"Pazisi","databaseExchangeFileStorageName":"Backups","useSmartSchema":"Reduce","version":3}""");
+
+        (Result<StsProjectCreatorSettingsDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetProjectCreatorSettings());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/settings/projectcreator", handler.LastRequestUri!.AbsolutePath);
+        StsProjectCreatorSettingsDataModel projectCreatorSettings = result.Value;
+        Assert.Equal(4, projectCreatorSettings.IndentSize);
+        Assert.Equal("FakeHost", projectCreatorSettings.FakeHostProjectName);
+        Assert.Equal(@"D:\1WorkDotnet", projectCreatorSettings.ProjectsFolderPathReal);
+        Assert.Equal(@"D:\1WorkSecurity", projectCreatorSettings.SecretsFolderPathReal);
+        Assert.Equal("dl360", projectCreatorSettings.ProductionServerName);
+        Assert.Equal("Prod", projectCreatorSettings.ProductionEnvironmentName);
+        Assert.Equal("Pazisi", projectCreatorSettings.DeveloperDbConnectionName);
+        Assert.Equal("Backups", projectCreatorSettings.DatabaseExchangeFileStorageName);
+        Assert.Equal("Reduce", projectCreatorSettings.UseSmartSchema);
+        Assert.Equal(3, projectCreatorSettings.Version);
+    }
+
+    [Fact]
+    public async Task UpdateProjectCreatorSettings_PostsTheRecordAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "1");
+        var projectCreatorSettings = new StsProjectCreatorSettingsDataModel
+        {
+            IndentSize = 4,
+            FakeHostProjectName = "FakeHost",
+            ProjectsFolderPathReal = @"D:\1WorkDotnet",
+            ProductionServerName = "dl360",
+            UseSmartSchema = "Reduce",
+            Version = 0
+        };
+
+        (Result<int> result, string output) = await CaptureConsole(() =>
+            CreateClient(handler).UpdateProjectCreatorSettings(projectCreatorSettings));
+
+        Assert.Equal(1, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/settings/projectcreator/update", handler.LastRequestUri!.AbsolutePath);
+        StsProjectCreatorSettingsDataModel sent =
+            JsonConvert.DeserializeObject<StsProjectCreatorSettingsDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal(4, sent.IndentSize);
+        Assert.Equal("FakeHost", sent.FakeHostProjectName);
+        Assert.Equal(@"D:\1WorkDotnet", sent.ProjectsFolderPathReal);
+        Assert.Equal("dl360", sent.ProductionServerName);
+        Assert.Equal("Reduce", sent.UseSmartSchema);
+        Assert.Equal(0, sent.Version);
+    }
+
+    //The project creator settings hold no secret, so the console shows the body like any other request
+    [Fact]
+    public async Task UpdateProjectCreatorSettings_WritesTheBodyOfAFailedRequestToTheConsole()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("Settings");
+
+        (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
+            .UpdateProjectCreatorSettings(new StsProjectCreatorSettingsDataModel
+            {
+                FakeHostProjectName = "FakeHost", Version = 1
+            }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Contains("request body was", output, StringComparison.Ordinal);
+        Assert.Contains("FakeHost", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetProjectTemplates_GetsTheListWithTheVersionsWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"name":"Console","supportProjectType":"Console","testProjectName":"ConsoleTest","testProjectShortName":"CT","useDatabase":true,"useMenu":true,"version":1},{"name":"Reactredux","supportProjectType":"Api","useReact":true,"useFluentValidation":true,"reactTemplateName":"redux-typescript","version":3}]""");
+
+        (Result<List<StsProjectTemplateDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetProjectTemplates());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/projecttemplates", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        StsProjectTemplateDataModel first = result.Value[0];
+        Assert.Equal("Console", first.Name);
+        Assert.Equal("Console", first.SupportProjectType);
+        Assert.Equal("ConsoleTest", first.TestProjectName);
+        Assert.Equal("CT", first.TestProjectShortName);
+        Assert.True(first.UseDatabase);
+        Assert.True(first.UseMenu);
+        Assert.False(first.UseReact);
+        Assert.Null(first.ReactTemplateName);
+        Assert.Equal(1, first.Version);
+        StsProjectTemplateDataModel second = result.Value[1];
+        Assert.True(second.UseReact);
+        Assert.True(second.UseFluentValidation);
+        Assert.Equal("redux-typescript", second.ReactTemplateName);
+        Assert.Equal(3, second.Version);
+    }
+
+    //Template names hold spaces, such as "Console With Database"
+    [Fact]
+    public async Task GetProjectTemplate_GetsTheRecordOfTheEscapedKeyWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"name":"Console With Database/1","supportProjectType":"Console","useDatabase":true,"version":2}""");
+
+        (Result<StsProjectTemplateDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetProjectTemplate("Console With Database/1"));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/projecttemplates/Console%20With%20Database%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.True(result.Value.UseDatabase);
+        Assert.Equal(2, result.Value.Version);
+    }
+
+    [Fact]
+    public async Task UpdateProjectTemplate_PostsTheRecordToTheEscapedKeyAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var projectTemplate = new StsProjectTemplateDataModel
+        {
+            Name = "Console With Database/1",
+            SupportProjectType = "Console",
+            TestProjectName = "ConsoleDbTest",
+            UseDatabase = true,
+            UseDbPartFolderForDatabaseProjects = true,
+            UseSignalR = true,
+            ReactTemplateName = "typescript",
+            Version = 3
+        };
+
+        (Result<int> result, string output) = await CaptureConsole(() =>
+            CreateClient(handler).UpdateProjectTemplate("Console With Database/1", projectTemplate));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/projecttemplates/update/Console%20With%20Database%2F1",
+            handler.LastRequestUri!.AbsolutePath);
+        StsProjectTemplateDataModel sent =
+            JsonConvert.DeserializeObject<StsProjectTemplateDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal("Console With Database/1", sent.Name);
+        Assert.Equal("Console", sent.SupportProjectType);
+        Assert.Equal("ConsoleDbTest", sent.TestProjectName);
+        Assert.True(sent.UseDatabase);
+        Assert.True(sent.UseDbPartFolderForDatabaseProjects);
+        Assert.True(sent.UseSignalR);
+        Assert.False(sent.UseMenu);
+        Assert.Equal("typescript", sent.ReactTemplateName);
+        Assert.Equal(3, sent.Version);
+    }
+
+    [Fact]
+    public async Task DeleteProjectTemplate_DeletesTheEscapedKeyWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) = await CaptureConsole(async () =>
+            await CreateClient(handler).DeleteProjectTemplate("Console With Database/1", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/projecttemplates/delete/Console%20With%20Database%2F1",
+            handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteProjectTemplate_WithoutVersion_SendsNoVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteProjectTemplate("Console", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/projecttemplates/delete/Console", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+    }
 }

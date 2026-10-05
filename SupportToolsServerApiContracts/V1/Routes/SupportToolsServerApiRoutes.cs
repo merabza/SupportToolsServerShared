@@ -199,6 +199,50 @@ public static class SupportToolsServerApiRoutes
         public const string Delete = DeletePrefix + "/{key}";
     }
 
+    //singleton: ერთადერთი ჩანაწერი, key-ის გარეშე. სანამ ის შეიქმნება, GET ცარიელ კონტრაქტს აბრუნებს Version = 0-ით.
+    //წაშლის route არ არის
+    public static class GlobalSettings
+    {
+        public const string Base = "/settings/global";
+
+        // GET api/v1/settings/global
+        public const string Get = "";
+
+        // POST api/v1/settings/global/update
+        public const string Update = "/update";
+    }
+
+    //singleton, GlobalSettings-ის მსგავსად
+    public static class ProjectCreatorSettings
+    {
+        public const string Base = "/settings/projectcreator";
+
+        // GET api/v1/settings/projectcreator
+        public const string Get = "";
+
+        // POST api/v1/settings/projectcreator/update
+        public const string Update = "/update";
+    }
+
+    public static class ProjectTemplates
+    {
+        public const string Base = "/projecttemplates";
+
+        // GET api/v1/projecttemplates
+        public const string List = "";
+
+        // GET api/v1/projecttemplates/{key}
+        public const string ByKey = "/{key}";
+
+        // POST api/v1/projecttemplates/update/{key}
+        public const string UpdatePrefix = "/update";
+        public const string Update = UpdatePrefix + "/{key}";
+
+        // DELETE api/v1/projecttemplates/delete/{key}?version=N
+        public const string DeletePrefix = "/delete";
+        public const string Delete = DeletePrefix + "/{key}";
+    }
+
     public static class Git
     {
         public const string GitBase = "/git";

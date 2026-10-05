@@ -276,7 +276,8 @@ public sealed class SupportToolsServerApiClient : ApiClient
             false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
     }
 
-    //ApiClient-ს, რომელსაც სხვა ჩანაწერი იყენებს (DatabaseServerConnection, Server), სერვერი არ შლის: 409 RecordIsInUse
+    //ApiClient-ს, რომელსაც სხვა ჩანაწერი იყენებს (DatabaseServerConnection, Server, GlobalSettings), სერვერი არ შლის:
+    //409 RecordIsInUse
     public ValueTask<Result> DeleteApiClient(string key, int? version, CancellationToken cancellationToken = default)
     {
         return DeleteAsync(
@@ -349,6 +350,82 @@ public sealed class SupportToolsServerApiClient : ApiClient
     {
         return DeleteAsync(
             $"{SupportToolsServerApiRoutes.Servers.Base}{SupportToolsServerApiRoutes.Servers.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
+            cancellationToken);
+    }
+
+    //რეესტრი: გლობალური პარამეტრები. ჩანაწერი ერთადერთია (singleton) და გასაღები არ აქვს. სანამ ის შეიქმნება, სერვერი
+    //ცარიელ კონტრაქტს აბრუნებს Version = 0-ით. ჩანაწერში MediatRLicenseKey-ია, ამიტომ განახლების ტანი შეცდომისას
+    //კონსოლზე არ იბეჭდება
+    public Task<Result<StsGlobalSettingsDataModel>> GetGlobalSettings(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsGlobalSettingsDataModel>(
+            $"{SupportToolsServerApiRoutes.GlobalSettings.Base}{SupportToolsServerApiRoutes.GlobalSettings.Get}", false,
+            cancellationToken);
+    }
+
+    //upsert: globalSettings.Version მოსალოდნელი ვერსიაა (0 — პირველი შექმნა). წარმატებისას ბრუნდება ახალი ვერსია
+    public Task<Result<int>> UpdateGlobalSettings(StsGlobalSettingsDataModel globalSettings,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(globalSettings);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.GlobalSettings.Base}{SupportToolsServerApiRoutes.GlobalSettings.Update}",
+            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+    }
+
+    //რეესტრი: პროექტის შემქმნელის პარამეტრები, GlobalSettings-ის მსგავსი singleton. ჩანაწერში საიდუმლო არ არის, ამიტომ
+    //განახლების ტანი შეცდომისას კონსოლზე იბეჭდება
+    public Task<Result<StsProjectCreatorSettingsDataModel>> GetProjectCreatorSettings(
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsProjectCreatorSettingsDataModel>(
+            $"{SupportToolsServerApiRoutes.ProjectCreatorSettings.Base}{SupportToolsServerApiRoutes.ProjectCreatorSettings.Get}",
+            false, cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateProjectCreatorSettings(StsProjectCreatorSettingsDataModel projectCreatorSettings,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(projectCreatorSettings);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.ProjectCreatorSettings.Base}{SupportToolsServerApiRoutes.ProjectCreatorSettings.Update}",
+            false, bodyJsonData, cancellationToken);
+    }
+
+    //რეესტრი: პროექტის შაბლონები. ჩანაწერში საიდუმლო არ არის
+    public Task<Result<List<StsProjectTemplateDataModel>>> GetProjectTemplates(
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsProjectTemplateDataModel>>(
+            $"{SupportToolsServerApiRoutes.ProjectTemplates.Base}{SupportToolsServerApiRoutes.ProjectTemplates.List}",
+            false, cancellationToken);
+    }
+
+    public Task<Result<StsProjectTemplateDataModel>> GetProjectTemplate(string key,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsProjectTemplateDataModel>(
+            $"{SupportToolsServerApiRoutes.ProjectTemplates.Base}/{Uri.EscapeDataString(key)}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<int>> UpdateProjectTemplate(string key, StsProjectTemplateDataModel projectTemplate,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(projectTemplate);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.ProjectTemplates.Base}{SupportToolsServerApiRoutes.ProjectTemplates.UpdatePrefix}/{Uri.EscapeDataString(key)}",
+            false, bodyJsonData, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteProjectTemplate(string key, int? version,
+        CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.ProjectTemplates.Base}{SupportToolsServerApiRoutes.ProjectTemplates.DeletePrefix}/{Uri.EscapeDataString(key)}{VersionQuery(version)}",
             cancellationToken);
     }
 

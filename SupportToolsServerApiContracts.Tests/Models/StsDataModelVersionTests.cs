@@ -377,4 +377,183 @@ public sealed class StsDataModelVersionTests
         Assert.Equal("/opt/apps", read.ServerSideDeployFolder);
         Assert.Equal(7, read.Version);
     }
+
+    //The empty contract that the server returns before the singleton is created. LocalPath of the client's
+    //DatabasesBackupFilesExchangeParameters belongs to the machine: the contract has no such value and ignores it
+    [Fact]
+    public void StsGlobalSettingsDataModel_ReadsTheMissingValuesAsEmptyAndAMissingVersionAsZero()
+    {
+        var model = JsonConvert.DeserializeObject<StsGlobalSettingsDataModel>(
+            """{"DatabasesBackupFilesExchange":{"LocalPath":"D:\\Backups"}}""")!;
+        var empty = JsonConvert.DeserializeObject<StsGlobalSettingsDataModel>("{}")!;
+
+        Assert.Null(model.ServiceDescriptionSignature);
+        Assert.Null(model.MediatRLicenseKey);
+        Assert.Null(model.FileStorageNameForExchange);
+        Assert.Null(model.LocalPackageManagerWebApiClientName);
+        Assert.Null(model.DatabasesBackupFilesExchange.DownloadTempExtension);
+        Assert.Null(model.DatabasesBackupFilesExchange.ExchangeFileStorageName);
+        Assert.Equal(0, model.Version);
+        Assert.NotNull(empty.DatabasesBackupFilesExchange);
+        Assert.Null(empty.DatabasesBackupFilesExchange.LocalSmartSchemaName);
+        Assert.Equal(0, empty.Version);
+    }
+
+    [Fact]
+    public void StsGlobalSettingsDataModel_RoundTripsEveryValue()
+    {
+        var model = new StsGlobalSettingsDataModel
+        {
+            ServiceDescriptionSignature = "ltgmz",
+            UploadTempExtension = ".up!",
+            ProgramArchiveDateMask = "yyyyMMddHHmmss",
+            ProgramArchiveExtension = ".zip",
+            ParametersFileDateMask = "yyyyMMdd",
+            ParametersFileExtension = ".json",
+            MediatRLicenseKey = "made-up-license-key",
+            FileStorageNameForExchange = "Exchange",
+            SmartSchemaNameForExchange = "Reduce",
+            SmartSchemaNameForLocal = "Keep",
+            LocalPackageManagerWebApiClientName = "packages.example.com",
+            DatabasesBackupFilesExchange = new StsDatabasesBackupFilesExchangeDataModel
+            {
+                DownloadTempExtension = ".down!",
+                UploadTempExtension = ".up!",
+                ExchangeFileStorageName = "Backups",
+                ExchangeSmartSchemaName = "Reduce",
+                LocalSmartSchemaName = "Keep"
+            },
+            Version = 7
+        };
+
+        var read = JsonConvert.DeserializeObject<StsGlobalSettingsDataModel>(JsonConvert.SerializeObject(model))!;
+
+        Assert.Equal("ltgmz", read.ServiceDescriptionSignature);
+        Assert.Equal(".up!", read.UploadTempExtension);
+        Assert.Equal("yyyyMMddHHmmss", read.ProgramArchiveDateMask);
+        Assert.Equal(".zip", read.ProgramArchiveExtension);
+        Assert.Equal("yyyyMMdd", read.ParametersFileDateMask);
+        Assert.Equal(".json", read.ParametersFileExtension);
+        Assert.Equal("made-up-license-key", read.MediatRLicenseKey);
+        Assert.Equal("Exchange", read.FileStorageNameForExchange);
+        Assert.Equal("Reduce", read.SmartSchemaNameForExchange);
+        Assert.Equal("Keep", read.SmartSchemaNameForLocal);
+        Assert.Equal("packages.example.com", read.LocalPackageManagerWebApiClientName);
+        Assert.Equal(".down!", read.DatabasesBackupFilesExchange.DownloadTempExtension);
+        Assert.Equal(".up!", read.DatabasesBackupFilesExchange.UploadTempExtension);
+        Assert.Equal("Backups", read.DatabasesBackupFilesExchange.ExchangeFileStorageName);
+        Assert.Equal("Reduce", read.DatabasesBackupFilesExchange.ExchangeSmartSchemaName);
+        Assert.Equal("Keep", read.DatabasesBackupFilesExchange.LocalSmartSchemaName);
+        Assert.Equal(7, read.Version);
+    }
+
+    //Templates of the client's AppProjectCreatorAllParameters are separate records: the contract has no such value
+    [Fact]
+    public void StsProjectCreatorSettingsDataModel_ReadsTheMissingValuesAsDefaultsAndAMissingVersionAsZero()
+    {
+        var model = JsonConvert.DeserializeObject<StsProjectCreatorSettingsDataModel>(
+            """{"Templates":{"Console":{"SupportProjectType":0}}}""")!;
+
+        Assert.Equal(0, model.IndentSize);
+        Assert.Null(model.FakeHostProjectName);
+        Assert.Null(model.ProjectsFolderPathReal);
+        Assert.Null(model.SecretsFolderPathReal);
+        Assert.Null(model.ProductionServerName);
+        Assert.Null(model.ProductionEnvironmentName);
+        Assert.Null(model.DeveloperDbConnectionName);
+        Assert.Null(model.DatabaseExchangeFileStorageName);
+        Assert.Null(model.UseSmartSchema);
+        Assert.Equal(0, model.Version);
+    }
+
+    [Fact]
+    public void StsProjectCreatorSettingsDataModel_RoundTripsEveryValue()
+    {
+        var model = new StsProjectCreatorSettingsDataModel
+        {
+            IndentSize = 4,
+            FakeHostProjectName = "FakeHost",
+            ProjectsFolderPathReal = @"D:\1WorkDotnet",
+            SecretsFolderPathReal = @"D:\1WorkSecurity",
+            ProductionServerName = "dl360",
+            ProductionEnvironmentName = "Prod",
+            DeveloperDbConnectionName = "Pazisi",
+            DatabaseExchangeFileStorageName = "Backups",
+            UseSmartSchema = "Reduce",
+            Version = 7
+        };
+
+        var read = JsonConvert.DeserializeObject<StsProjectCreatorSettingsDataModel>(
+            JsonConvert.SerializeObject(model))!;
+
+        Assert.Equal(4, read.IndentSize);
+        Assert.Equal("FakeHost", read.FakeHostProjectName);
+        Assert.Equal(@"D:\1WorkDotnet", read.ProjectsFolderPathReal);
+        Assert.Equal(@"D:\1WorkSecurity", read.SecretsFolderPathReal);
+        Assert.Equal("dl360", read.ProductionServerName);
+        Assert.Equal("Prod", read.ProductionEnvironmentName);
+        Assert.Equal("Pazisi", read.DeveloperDbConnectionName);
+        Assert.Equal("Backups", read.DatabaseExchangeFileStorageName);
+        Assert.Equal("Reduce", read.UseSmartSchema);
+        Assert.Equal(7, read.Version);
+    }
+
+    [Fact]
+    public void StsProjectTemplateDataModel_ReadsTheMissingOptionalValuesAsDefaultsAndAMissingVersionAsZero()
+    {
+        var model = JsonConvert.DeserializeObject<StsProjectTemplateDataModel>(
+            """{"Name":"Console","SupportProjectType":"Console"}""")!;
+
+        Assert.Equal("Console", model.Name);
+        Assert.Equal("Console", model.SupportProjectType);
+        Assert.Null(model.TestProjectName);
+        Assert.Null(model.TestProjectShortName);
+        Assert.False(model.UseDatabase);
+        Assert.False(model.UseFluentValidation);
+        Assert.Null(model.ReactTemplateName);
+        Assert.Equal(0, model.Version);
+    }
+
+    [Fact]
+    public void StsProjectTemplateDataModel_RoundTripsEveryValue()
+    {
+        var model = new StsProjectTemplateDataModel
+        {
+            Name = "Reactredux",
+            SupportProjectType = "Api",
+            TestProjectName = "ReactTest",
+            TestProjectShortName = "Rt",
+            UseDatabase = true,
+            UseDbPartFolderForDatabaseProjects = true,
+            UseMenu = true,
+            UseHttps = true,
+            UseReact = true,
+            UseCarcass = true,
+            UseIdentity = true,
+            UseReCounter = true,
+            UseSignalR = true,
+            UseFluentValidation = true,
+            ReactTemplateName = "redux-typescript",
+            Version = 7
+        };
+
+        var read = JsonConvert.DeserializeObject<StsProjectTemplateDataModel>(JsonConvert.SerializeObject(model))!;
+
+        Assert.Equal("Reactredux", read.Name);
+        Assert.Equal("Api", read.SupportProjectType);
+        Assert.Equal("ReactTest", read.TestProjectName);
+        Assert.Equal("Rt", read.TestProjectShortName);
+        Assert.True(read.UseDatabase);
+        Assert.True(read.UseDbPartFolderForDatabaseProjects);
+        Assert.True(read.UseMenu);
+        Assert.True(read.UseHttps);
+        Assert.True(read.UseReact);
+        Assert.True(read.UseCarcass);
+        Assert.True(read.UseIdentity);
+        Assert.True(read.UseReCounter);
+        Assert.True(read.UseSignalR);
+        Assert.True(read.UseFluentValidation);
+        Assert.Equal("redux-typescript", read.ReactTemplateName);
+        Assert.Equal(7, read.Version);
+    }
 }
