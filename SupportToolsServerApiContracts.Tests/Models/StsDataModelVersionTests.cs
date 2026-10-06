@@ -557,12 +557,11 @@ public sealed class StsDataModelVersionTests
         Assert.Equal(7, read.Version);
     }
 
-    //ServerInfos of the client's ProjectModel are not part of the contract yet (B7), so they are ignored
     [Fact]
     public void StsProjectDataModel_ReadsTheMissingValuesAsDefaultsAndAMissingVersionAsZero()
     {
         var model = JsonConvert.DeserializeObject<StsProjectDataModel>(
-            """{"Name":"AppA","ProjectType":"Standard","ServerInfos":{"PAZISI|Prod":{"ServerName":"PAZISI"}}}""")!;
+            """{"Name":"AppA","ProjectType":"Standard"}""")!;
 
         Assert.Equal("AppA", model.Name);
         Assert.Equal("Standard", model.ProjectType);
@@ -583,7 +582,29 @@ public sealed class StsDataModelVersionTests
         Assert.Empty(model.AllowToolsList);
         Assert.Empty(model.Endpoints);
         Assert.Empty(model.RouteClasses);
+        Assert.Empty(model.ServerInfos);
         Assert.Equal(0, model.Version);
+    }
+
+    //A server info has no version of its own: it is part of the project's version
+    [Fact]
+    public void StsServerInfoDataModel_ReadsTheMissingValuesAsDefaults()
+    {
+        var model = JsonConvert.DeserializeObject<StsServerInfoDataModel>(
+            """{"ServerName":"PAZISI","EnvironmentName":"Prod"}""")!;
+
+        Assert.Equal("PAZISI", model.ServerName);
+        Assert.Equal("Prod", model.EnvironmentName);
+        Assert.Null(model.WebAgentNameForCheck);
+        Assert.Equal(0, model.ServerSidePort);
+        Assert.Null(model.ApiVersionId);
+        Assert.Null(model.AppSettingsJsonSourceFileName);
+        Assert.Null(model.AppSettingsEncodedJsonFileName);
+        Assert.Null(model.ServiceUserName);
+        Assert.Empty(model.AllowToolsList);
+        Assert.Null(model.CurrentDatabaseParameters);
+        Assert.Null(model.NewDatabaseParameters);
+        Assert.Null(typeof(StsServerInfoDataModel).GetProperty("Version"));
     }
 
     [Fact]
@@ -668,6 +689,26 @@ public sealed class StsDataModelVersionTests
             [
                 new StsProjectRouteClassDataModel { Name = "Git", Root = "api", ApiVersion = "v1", Base = "/git" }
             ],
+            ServerInfos =
+            [
+                new StsServerInfoDataModel
+                {
+                    ServerName = "PAZISI",
+                    EnvironmentName = "Prod",
+                    WebAgentNameForCheck = "PAZISI.WebAgent",
+                    ServerSidePort = 5022,
+                    ApiVersionId = "v1",
+                    AppSettingsJsonSourceFileName = @"D:\1WorkSecurity\AppA\PAZISI\appsettings.json",
+                    AppSettingsEncodedJsonFileName = @"D:\1WorkSecurity\AppA\PAZISI\appsettingsEncoded.json",
+                    ServiceUserName = "merab",
+                    AllowToolsList = ["ProgramUpdater", "AppSettingsEncoder"],
+                    NewDatabaseParameters = new StsDatabaseParametersDataModel
+                    {
+                        DbConnectionName = "PAZISI.Sql", DatabaseName = "AppA", CommandTimeOut = 300
+                    }
+                },
+                new StsServerInfoDataModel { ServerName = "dl360", EnvironmentName = "Test" }
+            ],
             Version = 7
         };
 
@@ -685,6 +726,14 @@ public sealed class StsDataModelVersionTests
         Assert.Equal(["react-redux", "@reduxjs/toolkit"], read.FrontNpmPackageNames);
         Assert.Equal("Post", Assert.Single(read.Endpoints).HttpMethod);
         Assert.Equal("v1", Assert.Single(read.RouteClasses).ApiVersion);
+        Assert.Equal(["PAZISI|Prod", "dl360|Test"],
+            read.ServerInfos.Select(x => $"{x.ServerName}|{x.EnvironmentName}"));
+        StsServerInfoDataModel serverInfo = read.ServerInfos[0];
+        Assert.Equal("PAZISI.WebAgent", serverInfo.WebAgentNameForCheck);
+        Assert.Equal(5022, serverInfo.ServerSidePort);
+        Assert.Equal(["ProgramUpdater", "AppSettingsEncoder"], serverInfo.AllowToolsList);
+        Assert.Null(serverInfo.CurrentDatabaseParameters);
+        Assert.Equal(300, serverInfo.NewDatabaseParameters!.CommandTimeOut);
         Assert.Equal(7, read.Version);
     }
 }

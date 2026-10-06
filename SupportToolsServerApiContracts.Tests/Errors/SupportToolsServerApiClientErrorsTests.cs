@@ -189,6 +189,17 @@ public sealed class SupportToolsServerApiClientErrorsTests
     }
 
     [Fact]
+    public void ValueOutOfRange_IsAProblemNamingTheValueAndTheBounds()
+    {
+        Error error = SupportToolsServerApiClientErrors.ValueOutOfRange("ServerInfos.PAZISI|Prod.ServerSidePort", 0,
+            65535);
+
+        Assert.Equal("ValueOutOfRange", error.Code);
+        Assert.Equal("ServerInfos.PAZISI|Prod.ServerSidePort Is Not Between 0 And 65535", error.Description);
+        Assert.Equal(ErrorType.Problem, error.Type);
+    }
+
+    [Fact]
     public void InvalidGitFolderName_IsAProblemNamingTheValue()
     {
         Error error = SupportToolsServerApiClientErrors.InvalidGitFolderName("RepoA.GitProjectFolderName");

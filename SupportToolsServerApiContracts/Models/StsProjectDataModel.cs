@@ -8,10 +8,11 @@ namespace SupportToolsServerApiContracts.Models;
 //ნიშნავს, რომ მითითება არ არის, არარსებული სახელები კი 404 ReferencedRecordsNotFound-ია. გზები კანონიკური ფორმითაა
 //(README G3). KeyGuidPart საიდუმლოა: ღიად გადაიცემა, მაგრამ არსად იბეჭდება. DevDatabaseParameters და
 //ProdCopyDatabaseParameters null-ია, თუ პროექტს ისინი არ აქვს. სიები სიმრავლეებია: სერვერი მათ სახელით დალაგებულს
-//აბრუნებს (OrdinalIgnoreCase), endpoint-ებსა და route კლასებს კი Name-ით, რომ კლიენტის ჰეში რიგზე არ იყოს
-//დამოკიდებული. AllowToolsList კლიენტის EProjectTools-ის სახელებია. ჩანაწერები სახელით ემთხვევა, რეგისტრის გარეშე.
-//upsert-ში Version მოსალოდნელი ვერსიაა: 0 ნიშნავს ახალ ჩანაწერს, N კი განახლებას მხოლოდ მაშინ, თუ სერვერზე შენახული
-//ვერსია N-ია. განახლება მთელ პროექტს ანაცვლებს, ბაზის პარამეტრებისა და სიების ჩათვლით
+//აბრუნებს (OrdinalIgnoreCase), endpoint-ებსა და route კლასებს Name-ით, ServerInfo-ებს კი ServerName-ითა და
+//EnvironmentName-ით, რომ კლიენტის ჰეში რიგზე არ იყოს დამოკიდებული. AllowToolsList კლიენტის EProjectTools-ის სახელებია.
+//ჩანაწერები სახელით ემთხვევა, რეგისტრის გარეშე. upsert-ში Version მოსალოდნელი ვერსიაა: 0 ნიშნავს ახალ ჩანაწერს, N კი
+//განახლებას მხოლოდ მაშინ, თუ სერვერზე შენახული ვერსია N-ია. განახლება მთელ პროექტს ანაცვლებს, ბაზის პარამეტრების,
+//სიებისა და ServerInfo-ების ჩათვლით
 public sealed class StsProjectDataModel
 {
     public required string Name { get; set; }
@@ -59,8 +60,6 @@ public sealed class StsProjectDataModel
     public List<string> AllowToolsList { get; set; } = [];
     public List<StsProjectEndpointDataModel> Endpoints { get; set; } = [];
     public List<StsProjectRouteClassDataModel> RouteClasses { get; set; } = [];
-
-    //B7 აქ ServerInfo-ების სიას დაამატებს (ServerInfos, დალაგებული ServerName-ითა და EnvironmentName-ით)
-
+    public List<StsServerInfoDataModel> ServerInfos { get; set; } = [];
     public int Version { get; set; }
 }

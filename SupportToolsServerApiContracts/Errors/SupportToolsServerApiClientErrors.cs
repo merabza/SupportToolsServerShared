@@ -93,6 +93,13 @@ public static class SupportToolsServerApiClientErrors
         return Error.Problem(nameof(ValuesNotUnique), $"{valueName} Values Are Not Unique");
     }
 
+    //რიცხვითი ველი დასაშვებ შუალედში არ არის (მაგალითად, ServerInfo-ს ServerSidePort 0-დან 65535-მდე). საზღვრები
+    //შუალედს ეკუთვნის
+    public static Error ValueOutOfRange(string valueName, int minValue, int maxValue)
+    {
+        return Error.Problem(nameof(ValueOutOfRange), $"{valueName} Is Not Between {minValue} And {maxValue}");
+    }
+
     public static Error InvalidGitFolderName(string valueName)
     {
         return Error.Problem(nameof(InvalidGitFolderName), $"{valueName} Is Not A Valid Relative Folder Path");

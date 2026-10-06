@@ -1,10 +1,10 @@
 namespace SupportToolsServerApiContracts.Models;
 
 //ბაზის პარამეტრები, კლიენტის DatabaseParameters: StsProjectDataModel-ის DevDatabaseParameters და
-//ProdCopyDatabaseParameters (B7-ში ServerInfo-ს CurrentDatabaseParameters და NewDatabaseParameters). DbConnectionName ბაზის
-//კავშირის, SmartSchemaName ჭკვიანი სქემის, FileStorageName კი ფაილსაცავის სახელია; null ან ცარიელი ნიშნავს, რომ
-//მითითება არ არის, არარსებული სახელები კი 404 ReferencedRecordsNotFound-ია. DbServerFoldersSetName ბაზის კავშირის
-//ფოლდერების ნაკრების სახელია, რომელსაც სერვერი არ ამოწმებს. DatabaseRecoveryModel და BackupType კლიენტის
+//ProdCopyDatabaseParameters, ასევე StsServerInfoDataModel-ის CurrentDatabaseParameters და NewDatabaseParameters.
+//DbConnectionName ბაზის კავშირის, SmartSchemaName ჭკვიანი სქემის, FileStorageName კი ფაილსაცავის სახელია; null ან
+//ცარიელი ნიშნავს, რომ მითითება არ არის, არარსებული სახელები კი 404 ReferencedRecordsNotFound-ია. DbServerFoldersSetName
+//ბაზის კავშირის ფოლდერების ნაკრების სახელია, რომელსაც სერვერი არ ამოწმებს. DatabaseRecoveryModel და BackupType კლიენტის
 //EDatabaseRecoveryModel-ისა და EBackupType-ის სახელებია
 public sealed class StsDatabaseParametersDataModel
 {

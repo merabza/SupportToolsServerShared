@@ -1740,7 +1740,7 @@ public sealed class SupportToolsServerApiClientTests
     public async Task GetProjects_GetsTheAggregatesWithTheVersionsWithoutTheMessageHub()
     {
         using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
-            """[{"name":"AppA","projectType":"IsService","editorConfigPatternName":"default","solutionFileName":"D:\\1WorkDotnet\\AppA\\AppA.slnx","keyGuidPart":"made-up-key","devDatabaseParameters":{"dbConnectionName":"Pc1.Sql","databaseName":"AppADev","commandTimeOut":120,"compress":true},"prodCopyDatabaseParameters":null,"gitProjectNames":["AppA","AppAShared"],"scaffoldSeederGitProjectNames":["AppADbPart"],"frontNpmPackageNames":["react-redux"],"redundantFileNames":["*.pdb"],"allowToolsList":["SeedData"],"endpoints":[{"name":"Upload","endpointRoute":"/upload","httpMethod":"Post","endpointType":"Command"}],"routeClasses":[{"name":"Git","root":"api","apiVersion":"v1","base":"/git"}],"version":3},{"name":"AppB","projectType":"Standard","version":1}]""");
+            """[{"name":"AppA","projectType":"IsService","editorConfigPatternName":"default","solutionFileName":"D:\\1WorkDotnet\\AppA\\AppA.slnx","keyGuidPart":"made-up-key","devDatabaseParameters":{"dbConnectionName":"Pc1.Sql","databaseName":"AppADev","commandTimeOut":120,"compress":true},"prodCopyDatabaseParameters":null,"gitProjectNames":["AppA","AppAShared"],"scaffoldSeederGitProjectNames":["AppADbPart"],"frontNpmPackageNames":["react-redux"],"redundantFileNames":["*.pdb"],"allowToolsList":["SeedData"],"endpoints":[{"name":"Upload","endpointRoute":"/upload","httpMethod":"Post","endpointType":"Command"}],"routeClasses":[{"name":"Git","root":"api","apiVersion":"v1","base":"/git"}],"serverInfos":[{"serverName":"PAZISI","environmentName":"Prod","webAgentNameForCheck":"PAZISI.WebAgent","serverSidePort":5022,"apiVersionId":"v1","appSettingsJsonSourceFileName":"D:\\1WorkSecurity\\AppA\\appsettings.json","serviceUserName":"merab","allowToolsList":["ProgramUpdater"],"currentDatabaseParameters":{"dbConnectionName":"PAZISI.Sql","databaseName":"AppA","commandTimeOut":300},"newDatabaseParameters":null}],"version":3},{"name":"AppB","projectType":"Standard","version":1}]""");
 
         (Result<List<StsProjectDataModel>> result, string output) =
             await CaptureConsole(() => CreateClient(handler).GetProjects());
@@ -1766,9 +1766,22 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal(["SeedData"], first.AllowToolsList);
         Assert.Equal("/upload", Assert.Single(first.Endpoints).EndpointRoute);
         Assert.Equal("v1", Assert.Single(first.RouteClasses).ApiVersion);
+        StsServerInfoDataModel serverInfo = Assert.Single(first.ServerInfos);
+        Assert.Equal("PAZISI", serverInfo.ServerName);
+        Assert.Equal("Prod", serverInfo.EnvironmentName);
+        Assert.Equal("PAZISI.WebAgent", serverInfo.WebAgentNameForCheck);
+        Assert.Equal(5022, serverInfo.ServerSidePort);
+        Assert.Equal("v1", serverInfo.ApiVersionId);
+        Assert.Equal(@"D:\1WorkSecurity\AppA\appsettings.json", serverInfo.AppSettingsJsonSourceFileName);
+        Assert.Null(serverInfo.AppSettingsEncodedJsonFileName);
+        Assert.Equal("merab", serverInfo.ServiceUserName);
+        Assert.Equal(["ProgramUpdater"], serverInfo.AllowToolsList);
+        Assert.Equal(300, serverInfo.CurrentDatabaseParameters!.CommandTimeOut);
+        Assert.Null(serverInfo.NewDatabaseParameters);
         Assert.Equal(3, first.Version);
         Assert.Null(result.Value[1].DevDatabaseParameters);
         Assert.Empty(result.Value[1].GitProjectNames);
+        Assert.Empty(result.Value[1].ServerInfos);
     }
 
     [Fact]
@@ -1802,6 +1815,16 @@ public sealed class SupportToolsServerApiClientTests
             },
             GitProjectNames = ["AppA"],
             Endpoints = [new StsProjectEndpointDataModel { Name = "Get", HttpMethod = "Get", EndpointType = "Query" }],
+            ServerInfos =
+            [
+                new StsServerInfoDataModel
+                {
+                    ServerName = "dl360",
+                    EnvironmentName = "Test",
+                    ServerSidePort = 5050,
+                    AllowToolsList = ["ServiceStarter"]
+                }
+            ],
             Version = 3
         };
 
@@ -1821,6 +1844,10 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal(60, sent.ProdCopyDatabaseParameters.CommandTimeOut);
         Assert.Equal(["AppA"], sent.GitProjectNames);
         Assert.Equal("Query", Assert.Single(sent.Endpoints).EndpointType);
+        StsServerInfoDataModel serverInfo = Assert.Single(sent.ServerInfos);
+        Assert.Equal("dl360|Test", $"{serverInfo.ServerName}|{serverInfo.EnvironmentName}");
+        Assert.Equal(5050, serverInfo.ServerSidePort);
+        Assert.Equal(["ServiceStarter"], serverInfo.AllowToolsList);
         Assert.Equal(3, sent.Version);
     }
 
