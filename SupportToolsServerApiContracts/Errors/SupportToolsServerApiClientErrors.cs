@@ -88,6 +88,13 @@ public static class SupportToolsServerApiClientErrors
         return Error.Problem(nameof(ValueTooLong), $"{valueName} Is Longer Than {maxLength} Characters");
     }
 
+    //მნიშვნელობის ზომა ბაიტებში დასაშვებს აღემატება (მაგალითად, საიდუმლო ფაილის შიგთავსი UTF-8-ში). მნიშვნელობა
+    //შეტყობინებაში არ იწერება
+    public static Error ValueTooLarge(string valueName, int maxBytes)
+    {
+        return Error.Problem(nameof(ValueTooLarge), $"{valueName} Is Larger Than {maxBytes} Bytes");
+    }
+
     public static Error ValuesNotUnique(string valueName)
     {
         return Error.Problem(nameof(ValuesNotUnique), $"{valueName} Values Are Not Unique");
@@ -109,5 +116,12 @@ public static class SupportToolsServerApiClientErrors
     {
         return Error.Problem(nameof(InvalidGitAddress),
             $"{valueName} Is Not A Valid Git Address (git@host:path, ssh:// Or https://)");
+    }
+
+    //გზა Windows-ის აბსოლუტური ფორმის არ არის ან დაუშვებელ სეგმენტს შეიცავს (მაგალითად, საიდუმლო ფაილის Path)
+    public static Error InvalidFilePath(string valueName)
+    {
+        return Error.Problem(nameof(InvalidFilePath),
+            $"{valueName} Is Not A Valid Absolute Windows File Path (X:\\...)");
     }
 }

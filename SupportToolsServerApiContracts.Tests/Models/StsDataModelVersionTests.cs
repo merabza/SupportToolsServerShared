@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Newtonsoft.Json;
 using SupportToolsServerApiContracts.Models;
@@ -735,5 +736,66 @@ public sealed class StsDataModelVersionTests
         Assert.Null(serverInfo.CurrentDatabaseParameters);
         Assert.Equal(300, serverInfo.NewDatabaseParameters!.CommandTimeOut);
         Assert.Equal(7, read.Version);
+    }
+
+    //An upload without Version creates the file
+    [Fact]
+    public void StsStoredFileDataModel_ReadsAMissingVersionAsZero()
+    {
+        var model = JsonConvert.DeserializeObject<StsStoredFileDataModel>(
+            """{"Path":"D:\\1WorkSecurity\\AppA\\appsettings.json","Content":"{}"}""")!;
+
+        Assert.Equal(@"D:\1WorkSecurity\AppA\appsettings.json", model.Path);
+        Assert.Equal("{}", model.Content);
+        Assert.Equal(0, model.Version);
+    }
+
+    [Fact]
+    public void StsStoredFileDataModel_RoundTripsThePathAndTheContentUnchanged()
+    {
+        var model = new StsStoredFileDataModel
+        {
+            Path = @"D:\1WorkSecurity\ა b+c\appsettings.json",
+            Content = "{\r\n  \"Key\": \"made-up\",\t\"Text\": \"ა\\\"\"\r\n}\r\n",
+            Version = 7
+        };
+
+        var read = JsonConvert.DeserializeObject<StsStoredFileDataModel>(JsonConvert.SerializeObject(model))!;
+
+        Assert.Equal(model.Path, read.Path);
+        Assert.Equal(model.Content, read.Content);
+        Assert.Equal(7, read.Version);
+    }
+
+    [Fact]
+    public void StsStoredFileDataModel_LimitsTheContentToOneMebibyte()
+    {
+        Assert.Equal(1048576, StsStoredFileDataModel.ContentMaxBytes);
+    }
+
+    //The server writes the time of the last change in UTC, with Z (System.Text.Json, camel case)
+    [Fact]
+    public void StsStoredFileInfoDataModel_ReadsTheValuesOfTheServerWithTheTimeInUtc()
+    {
+        var model = JsonConvert.DeserializeObject<StsStoredFileInfoDataModel>(
+            """{"path":"D:\\1WorkSecurity\\a.json","sha256":"BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD","length":3,"updatedAtUtc":"2026-10-06T08:15:30.123Z","version":2}""")!;
+
+        Assert.Equal(@"D:\1WorkSecurity\a.json", model.Path);
+        Assert.Equal("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", model.Sha256);
+        Assert.Equal(3, model.Length);
+        Assert.Equal(new DateTime(2026, 10, 6, 8, 15, 30, 123, DateTimeKind.Utc), model.UpdatedAtUtc);
+        Assert.Equal(DateTimeKind.Utc, model.UpdatedAtUtc.Kind);
+        Assert.Equal(2, model.Version);
+    }
+
+    [Fact]
+    public void StsStoredFileInfoDataModel_ReadsAMissingVersionAsZero()
+    {
+        var model = JsonConvert.DeserializeObject<StsStoredFileInfoDataModel>(
+            """{"Path":"D:\\1WorkSecurity\\a.json","Sha256":"E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"}""")!;
+
+        Assert.Equal(0, model.Length);
+        Assert.Equal(default, model.UpdatedAtUtc);
+        Assert.Equal(0, model.Version);
     }
 }

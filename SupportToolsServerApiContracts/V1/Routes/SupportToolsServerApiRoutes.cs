@@ -263,6 +263,25 @@ public static class SupportToolsServerApiRoutes
         public const string Delete = DeletePrefix + "/{key}";
     }
 
+    //საიდუმლო ფაილები. გზა route-ის key-ში ვერ ჩაჯდება (\, :), ამიტომ GET-სა და DELETE-ს ის query-ში (path) გადაეცემა,
+    //Uri.EscapeDataString-ით, POST-ს კი ტანში. სია მხოლოდ მეტამონაცემებია, შიგთავსი content-ით მოდის
+    public static class StoredFiles
+    {
+        public const string Base = "/files";
+
+        // GET api/v1/files
+        public const string List = "";
+
+        // GET api/v1/files/content?path=...
+        public const string Content = "/content";
+
+        // POST api/v1/files/update
+        public const string Update = "/update";
+
+        // DELETE api/v1/files/delete?path=...&version=N
+        public const string Delete = "/delete";
+    }
+
     public static class Git
     {
         public const string GitBase = "/git";

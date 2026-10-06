@@ -462,9 +462,54 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
+    //რეესტრი: საიდუმლო ფაილები, კანონიკური გზით. სია მხოლოდ მეტამონაცემებია (Sha256, Length), შიგთავსი GetStoredFile-ით
+    //მოდის. შიგთავსი საიდუმლოა, ამიტომ განახლების ტანი შეცდომისას კონსოლზე არ იბეჭდება
+    public Task<Result<List<StsStoredFileInfoDataModel>>> GetStoredFiles(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsStoredFileInfoDataModel>>(
+            $"{SupportToolsServerApiRoutes.StoredFiles.Base}{SupportToolsServerApiRoutes.StoredFiles.List}", false,
+            cancellationToken);
+    }
+
+    public Task<Result<StsStoredFileDataModel>> GetStoredFile(string path,
+        CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<StsStoredFileDataModel>(
+            $"{SupportToolsServerApiRoutes.StoredFiles.Base}{SupportToolsServerApiRoutes.StoredFiles.Content}{StoredFileQuery(path, null)}",
+            false, cancellationToken);
+    }
+
+    //upsert: storedFile.Version მოსალოდნელი ვერსიაა (0 — შექმნა). წარმატებისას ბრუნდება ფაილის ახალი ვერსია
+    public Task<Result<int>> UpdateStoredFile(StsStoredFileDataModel storedFile,
+        CancellationToken cancellationToken = default)
+    {
+        var bodyJsonData = JsonConvert.SerializeObject(storedFile);
+
+        return PostAsyncReturn<int>(
+            $"{SupportToolsServerApiRoutes.StoredFiles.Base}{SupportToolsServerApiRoutes.StoredFiles.Update}", false,
+            bodyJsonData, true, cancellationToken);
+    }
+
+    public ValueTask<Result> DeleteStoredFile(string path, int? version, CancellationToken cancellationToken = default)
+    {
+        return DeleteAsync(
+            $"{SupportToolsServerApiRoutes.StoredFiles.Base}{SupportToolsServerApiRoutes.StoredFiles.Delete}{StoredFileQuery(path, version)}",
+            cancellationToken);
+    }
+
     private static string VersionQuery(int? version)
     {
         return version is null ? string.Empty : $"?version={version.Value.ToString(CultureInfo.InvariantCulture)}";
+    }
+
+    //ფაილის გზა query-ში. Uri.EscapeDataString escape-ს უკეთებს ყველა სიმბოლოს, რომელიც query-ს დაარღვევდა (\, :, &, #,
+    //+, ჰარი, არა-ASCII), სერვერი კი მნიშვნელობას სრულად ხსნის
+    private static string StoredFileQuery(string path, int? version)
+    {
+        string pathQuery = $"?path={Uri.EscapeDataString(path)}";
+        return version is null
+            ? pathQuery
+            : $"{pathQuery}&version={version.Value.ToString(CultureInfo.InvariantCulture)}";
     }
 
     //შემოწმდეს არსებული ბაზის მდგომარეობა და საჭიროების შემთხვევაში გამოასწოროს ბაზა

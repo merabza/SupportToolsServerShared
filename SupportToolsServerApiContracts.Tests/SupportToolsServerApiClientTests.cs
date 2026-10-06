@@ -1911,4 +1911,162 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal(ErrorType.Conflict, result.Error.Type);
         Assert.Equal("GitRepo RepoA Is Used By: Project AppA, Project AppB", result.Error.Description);
     }
+
+    [Fact]
+    public async Task GetStoredFiles_GetsTheMetadataWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"path":"D:\\1WorkSecurity\\AppA\\appsettings.json","sha256":"BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD","length":3,"updatedAtUtc":"2026-10-06T08:15:30Z","version":2}]""");
+
+        (Result<List<StsStoredFileInfoDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetStoredFiles());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/files", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+        StsStoredFileInfoDataModel file = Assert.Single(result.Value);
+        Assert.Equal(@"D:\1WorkSecurity\AppA\appsettings.json", file.Path);
+        Assert.Equal("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", file.Sha256);
+        Assert.Equal(3, file.Length);
+        Assert.Equal(new DateTime(2026, 10, 6, 8, 15, 30, DateTimeKind.Utc), file.UpdatedAtUtc);
+        Assert.Equal(2, file.Version);
+    }
+
+    //The path cannot be a route key (\ and :), so it goes in the query, escaped with everything that would break the
+    //query (& = # + % space) or is not ASCII
+    [Theory]
+    [InlineData(@"D:\1WorkSecurity\AppA\PAZISI\Prod\appsettings.json",
+        "?path=D%3A%5C1WorkSecurity%5CAppA%5CPAZISI%5CProd%5Cappsettings.json")]
+    [InlineData(@"D:\1WorkSecurity\a b+c&d=e#f%g.json",
+        "?path=D%3A%5C1WorkSecurity%5Ca%20b%2Bc%26d%3De%23f%25g.json")]
+    [InlineData(@"D:\ქ\ფ.json", "?path=D%3A%5C%E1%83%A5%5C%E1%83%A4.json")]
+    public async Task GetStoredFile_GetsTheFileOfThePathEscapedInTheQueryWithoutTheMessageHub(string path,
+        string query)
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"path":"D:\\1WorkSecurity\\a.json","content":"{\"Key\":\"made-up\"}","version":4}""");
+
+        (Result<StsStoredFileDataModel> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetStoredFile(path));
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/files/content", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(query, handler.LastRequestUri.Query);
+        Assert.Equal(path, Uri.UnescapeDataString(handler.LastRequestUri.Query["?path=".Length..]));
+        Assert.Equal("""{"Key":"made-up"}""", result.Value.Content);
+        Assert.Equal(4, result.Value.Version);
+    }
+
+    //The client adds the API key to a query that already holds the path: both stay escaped
+    [Fact]
+    public async Task GetStoredFile_AddsTheApiKeyAfterTheEscapedPath()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """{"path":"D:\\a&b.json","content":"","version":1}""");
+        var client = new SupportToolsServerApiClient(null, new FakeHttpClientFactory(handler), Server,
+            "made-up key&1", false);
+
+        Result<StsStoredFileDataModel> result = await client.GetStoredFile(@"D:\a&b.json");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("?path=D%3A%5Ca%26b.json&apikey=made-up%20key%261", handler.LastRequestUri!.Query);
+    }
+
+    [Fact]
+    public async Task GetStoredFile_ReturnsRecordWithNameNotFound()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.NotFound,
+            """{"title":"RecordWithNameNotFound","status":404,"detail":"StoredFile With Name D:\\a.json Not Found"}""",
+            "application/problem+json");
+
+        Result<StsStoredFileDataModel> result = await CreateClient(handler).GetStoredFile(@"D:\a.json");
+
+        Assert.Equal("RecordWithNameNotFound", result.Error.Code);
+        Assert.Equal(ErrorType.NotFound, result.Error.Type);
+        Assert.Equal(@"StoredFile With Name D:\a.json Not Found", result.Error.Description);
+    }
+
+    //The path goes in the body, so the route has no key
+    [Fact]
+    public async Task UpdateStoredFile_PostsTheFileAndReturnsTheNewVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "4");
+        var storedFile = new StsStoredFileDataModel
+        {
+            Path = @"D:\1WorkSecurity\a b&c.json", Content = "{\r\n  \"Key\": \"made-up\"\r\n}", Version = 3
+        };
+
+        (Result<int> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).UpdateStoredFile(storedFile));
+
+        Assert.Equal(4, result.Value);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/files/update", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+        StsStoredFileDataModel sent = JsonConvert.DeserializeObject<StsStoredFileDataModel>(handler.LastRequestBody!)!;
+        Assert.Equal(@"D:\1WorkSecurity\a b&c.json", sent.Path);
+        Assert.Equal("{\r\n  \"Key\": \"made-up\"\r\n}", sent.Content);
+        Assert.Equal(3, sent.Version);
+    }
+
+    //The body holds the content of the secret file, so the console of a failed request leaves it out
+    [Fact]
+    public async Task UpdateStoredFile_DoesNotWriteTheContentOfAFailedRequestToTheConsole()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("StoredFile");
+
+        (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
+            .UpdateStoredFile(new StsStoredFileDataModel
+            {
+                Path = @"D:\1WorkSecurity\a.json", Content = """{"Password":"made-up-password"}""", Version = 1
+            }));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Contains("409 Conflict", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("request body was", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("made-up", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DeleteStoredFile_DeletesThePathEscapedInTheQueryWithTheExpectedVersion()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) = await CaptureConsole(async () =>
+            await CreateClient(handler).DeleteStoredFile(@"D:\1WorkSecurity\a b&c.json", 12));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(string.Empty, output);
+        Assert.Equal(HttpMethod.Delete, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/files/delete", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?path=D%3A%5C1WorkSecurity%5Ca%20b%26c.json&version=12", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteStoredFile_WithoutVersion_SendsOnlyThePath()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, _) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteStoredFile(@"D:\a.json", null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("/api/v1/files/delete", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal("?path=D%3A%5Ca.json", handler.LastRequestUri.Query);
+    }
+
+    [Fact]
+    public async Task DeleteStoredFile_ReturnsConcurrencyConflict()
+    {
+        using StubHttpMessageHandler handler = ConflictHandler("StoredFile");
+
+        (Result result, _) =
+            await CaptureConsole(async () => await CreateClient(handler).DeleteStoredFile(@"D:\a.json", 1));
+
+        Assert.Equal("ConcurrencyConflict", result.Error.Code);
+        Assert.Equal(ErrorType.Conflict, result.Error.Type);
+    }
 }

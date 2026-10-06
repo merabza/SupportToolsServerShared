@@ -178,6 +178,17 @@ public sealed class SupportToolsServerApiClientErrorsTests
         Assert.Equal(ErrorType.Problem, error.Type);
     }
 
+    //The size is measured in bytes (the UTF-8 content of a stored file), so the text names bytes, not characters
+    [Fact]
+    public void ValueTooLarge_IsAProblemNamingTheValueAndTheMaximumInBytes()
+    {
+        Error error = SupportToolsServerApiClientErrors.ValueTooLarge(@"D:\1WorkSecurity\a.json.Content", 1048576);
+
+        Assert.Equal("ValueTooLarge", error.Code);
+        Assert.Equal(@"D:\1WorkSecurity\a.json.Content Is Larger Than 1048576 Bytes", error.Description);
+        Assert.Equal(ErrorType.Problem, error.Type);
+    }
+
     [Fact]
     public void ValuesNotUnique_IsAProblemNamingTheValue()
     {
@@ -217,6 +228,16 @@ public sealed class SupportToolsServerApiClientErrorsTests
         Assert.Equal("InvalidGitAddress", error.Code);
         Assert.Equal("RepoA.GitProjectAddress Is Not A Valid Git Address (git@host:path, ssh:// Or https://)",
             error.Description);
+        Assert.Equal(ErrorType.Problem, error.Type);
+    }
+
+    [Fact]
+    public void InvalidFilePath_IsAProblemNamingTheValueAndTheAllowedForm()
+    {
+        Error error = SupportToolsServerApiClientErrors.InvalidFilePath("Path");
+
+        Assert.Equal("InvalidFilePath", error.Code);
+        Assert.Equal(@"Path Is Not A Valid Absolute Windows File Path (X:\...)", error.Description);
         Assert.Equal(ErrorType.Problem, error.Type);
     }
 }
