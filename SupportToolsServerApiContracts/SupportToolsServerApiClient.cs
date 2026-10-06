@@ -242,7 +242,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
 
         return PostAsyncReturn<int>(
             $"{SupportToolsServerApiRoutes.FileStorages.Base}{SupportToolsServerApiRoutes.FileStorages.UpdatePrefix}/{Uri.EscapeDataString(key)}",
-            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+            false, bodyJsonData, true, cancellationToken);
     }
 
     public ValueTask<Result> DeleteFileStorage(string key, int? version, CancellationToken cancellationToken = default)
@@ -273,7 +273,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
 
         return PostAsyncReturn<int>(
             $"{SupportToolsServerApiRoutes.ApiClients.Base}{SupportToolsServerApiRoutes.ApiClients.UpdatePrefix}/{Uri.EscapeDataString(key)}",
-            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+            false, bodyJsonData, true, cancellationToken);
     }
 
     //ApiClient-ს, რომელსაც სხვა ჩანაწერი იყენებს (DatabaseServerConnection, Server, GlobalSettings), სერვერი არ შლის:
@@ -310,7 +310,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
 
         return PostAsyncReturn<int>(
             $"{SupportToolsServerApiRoutes.DatabaseServerConnections.Base}{SupportToolsServerApiRoutes.DatabaseServerConnections.UpdatePrefix}/{Uri.EscapeDataString(key)}",
-            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+            false, bodyJsonData, true, cancellationToken);
     }
 
     public ValueTask<Result> DeleteDatabaseServerConnection(string key, int? version,
@@ -371,7 +371,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
 
         return PostAsyncReturn<int>(
             $"{SupportToolsServerApiRoutes.GlobalSettings.Base}{SupportToolsServerApiRoutes.GlobalSettings.Update}",
-            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+            false, bodyJsonData, true, cancellationToken);
     }
 
     //რეესტრი: პროექტის შემქმნელის პარამეტრები, GlobalSettings-ის მსგავსი singleton. ჩანაწერში საიდუმლო არ არის, ამიტომ
@@ -452,7 +452,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
 
         return PostAsyncReturn<int>(
             $"{SupportToolsServerApiRoutes.Projects.Base}{SupportToolsServerApiRoutes.Projects.UpdatePrefix}/{Uri.EscapeDataString(key)}",
-            false, bodyJsonData, bodyContainsSecrets: true, cancellationToken);
+            false, bodyJsonData, true, cancellationToken);
     }
 
     public ValueTask<Result> DeleteProject(string key, int? version, CancellationToken cancellationToken = default)
