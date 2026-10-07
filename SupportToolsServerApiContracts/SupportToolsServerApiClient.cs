@@ -583,6 +583,15 @@ public sealed class SupportToolsServerApiClient : ApiClient
             false, bodyJsonData, cancellationToken);
     }
 
+    //სერვერის კლონებიდან გამოთვლილი GitProjects (B9): ყველა რეპოზიტორიის ყველა პროექტი, git-ის სახელით, გზითა და ფაილის
+    //სახელით დალაგებული. ერთი პროექტის სახელი ორ რეპოზიტორიაში შეიძლება განმეორდეს
+    public Task<Result<List<StsGitProjectDataModel>>> GetGitProjects(CancellationToken cancellationToken = default)
+    {
+        return GetAsyncReturn<List<StsGitProjectDataModel>>(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitProjects}", false,
+            cancellationToken);
+    }
+
     public async Task<Result> UpdateGitIgnoreFileType(string gitIgnoreFileTypeName,
         CancellationToken cancellationToken = default)
     {

@@ -213,6 +213,51 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("CSharp", Assert.Single(result.Value).GitIgnorePatternName);
     }
 
+    //The server writes the contract with the camel case of ASP.NET Core; a relative path holds \
+    [Fact]
+    public async Task GetGitProjects_GetsTheListWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"gitName":"RepoA","projectRelativePath":"RepoA\\AppA","projectFileName":"AppA.csproj","dependsOnProjectNames":["LibA","LibB"]},{"gitName":"RepoB","projectRelativePath":"RepoB","projectFileName":"RepoB.esproj","dependsOnProjectNames":[]}]""");
+
+        (Result<List<StsGitProjectDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetGitProjects());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/git/gitprojects", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(2, result.Value.Count);
+        StsGitProjectDataModel appA = result.Value[0];
+        Assert.Equal("RepoA", appA.GitName);
+        Assert.Equal(@"RepoA\AppA", appA.ProjectRelativePath);
+        Assert.Equal("AppA.csproj", appA.ProjectFileName);
+        Assert.Equal(["LibA", "LibB"], appA.DependsOnProjectNames);
+        Assert.Empty(result.Value[1].DependsOnProjectNames);
+    }
+
+    [Fact]
+    public async Task GetGitProjects_ReadsMissingDependenciesAsAnEmptyList()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"gitName":"RepoA","projectRelativePath":"RepoA","projectFileName":"RepoA.csproj"}]""");
+
+        Result<List<StsGitProjectDataModel>> result = await CreateClient(handler).GetGitProjects();
+
+        Assert.Empty(Assert.Single(result.Value).DependsOnProjectNames);
+    }
+
+    [Fact]
+    public async Task GetGitProjects_ReturnsTheErrorOfTheServer()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.InternalServerError,
+            """{"title":"Db","status":500,"detail":"Database failure"}""", "application/problem+json");
+
+        Result<List<StsGitProjectDataModel>> result = await CreateClient(handler).GetGitProjects();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Db", result.Error.Code);
+    }
+
     [Fact]
     public async Task GetGitRepoByKey_GetsTheRepoOfTheEscapedKeyWithoutTheMessageHub()
     {

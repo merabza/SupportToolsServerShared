@@ -304,6 +304,9 @@ public static class SupportToolsServerApiRoutes
         public const string DeleteGitRepoPrefix = "/deletegitrepo";
         public const string DeleteGitRepo = DeleteGitRepoPrefix + "/{key}";
 
+        // GET api/v1/git/gitprojects
+        public const string GitProjects = "/gitprojects";
+
         //// GET api/v1/git/gitignorefilenames
         //public const string GitIgnoreFileNames = "/gitignorefilenames";
 
