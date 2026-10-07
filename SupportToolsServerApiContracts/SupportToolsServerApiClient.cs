@@ -506,7 +506,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
     //+, ჰარი, არა-ASCII), სერვერი კი მნიშვნელობას სრულად ხსნის
     private static string StoredFileQuery(string path, int? version)
     {
-        string pathQuery = $"?path={Uri.EscapeDataString(path)}";
+        var pathQuery = $"?path={Uri.EscapeDataString(path)}";
         return version is null
             ? pathQuery
             : $"{pathQuery}&version={version.Value.ToString(CultureInfo.InvariantCulture)}";
