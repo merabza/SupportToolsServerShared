@@ -10,8 +10,8 @@ public sealed class StsFileStorageDataModel
     public string? FileStoragePath { get; set; }
     public string? UserName { get; set; }
     public string? Password { get; set; }
-    public int FileNameMaxLength { get; set; }
-    public int FileSizeSplitPositionInRow { get; set; }
+    //public int FileNameMaxLength { get; set; }
+    //public int FileSizeSplitPositionInRow { get; set; }
     public int FtpSiteLsFileOffset { get; set; }
     public int Version { get; set; }
 }
