@@ -203,8 +203,6 @@ public sealed class StsDataModelVersionTests
         Assert.Null(model.FileStoragePath);
         Assert.Null(model.UserName);
         Assert.Null(model.Password);
-        Assert.Equal(0, model.FileNameMaxLength);
-        Assert.Equal(0, model.FileSizeSplitPositionInRow);
         Assert.Equal(0, model.FtpSiteLsFileOffset);
         Assert.Equal(0, model.Version);
     }
@@ -218,8 +216,6 @@ public sealed class StsDataModelVersionTests
             FileStoragePath = "ftp://ftp.example.com/exchange/",
             UserName = "made-up-user",
             Password = "made-up-password",
-            FileNameMaxLength = 255,
-            FileSizeSplitPositionInRow = 4,
             FtpSiteLsFileOffset = 1,
             Version = 7
         };
@@ -230,8 +226,6 @@ public sealed class StsDataModelVersionTests
         Assert.Equal("ftp://ftp.example.com/exchange/", read.FileStoragePath);
         Assert.Equal("made-up-user", read.UserName);
         Assert.Equal("made-up-password", read.Password);
-        Assert.Equal(255, read.FileNameMaxLength);
-        Assert.Equal(4, read.FileSizeSplitPositionInRow);
         Assert.Equal(1, read.FtpSiteLsFileOffset);
         Assert.Equal(7, read.Version);
     }

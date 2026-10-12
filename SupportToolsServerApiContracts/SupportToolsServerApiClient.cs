@@ -566,13 +566,6 @@ public sealed class SupportToolsServerApiClient : ApiClient
             cancellationToken);
     }
 
-    public Task<Result<StsGitDataModel>> GetGitRepoByKey(string gitKey, CancellationToken cancellationToken = default)
-    {
-        return GetAsyncReturn<StsGitDataModel>(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRepoPrefix}/{Uri.EscapeDataString(gitKey)}",
-            false, cancellationToken);
-    }
-
     public async Task<Result> UpdateGitRepoByKey(string gitKey, StsGitDataModel newRecord,
         CancellationToken cancellationToken = default)
     {
@@ -620,13 +613,6 @@ public sealed class SupportToolsServerApiClient : ApiClient
     {
         return await DeleteAsync(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.DeleteEditorConfigFileTypePrefix}/{Uri.EscapeDataString(editorConfigFileTypeName)}",
-            cancellationToken);
-    }
-
-    public Task<Result<List<string>>> GetGitIgnoreFileNames(CancellationToken cancellationToken = default)
-    {
-        return GetAsyncReturn<List<string>>(
-            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitIgnoreFileTypesList}", false,
             cancellationToken);
     }
 }

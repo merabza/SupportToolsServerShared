@@ -27,9 +27,6 @@ public sealed class SupportToolsServerApiClientTests
     private const string GitRepoJson =
         """{"GitProjectName":"RepoA","GitProjectAddress":"git@github.com:x/a.git","GitProjectFolderName":"A","GitIgnorePatternName":"CSharp"}""";
 
-    private const string NotFoundProblemJson =
-        """{"type":"https://tools.ietf.org/html/rfc7231#section-6.5.4","title":"GitWithKeyNotFound","status":404,"detail":"Git With Key Repo X/1 Not Found"}""";
-
     private static SupportToolsServerApiClient CreateClient(HttpMessageHandler handler)
     {
         return new SupportToolsServerApiClient(null, new FakeHttpClientFactory(handler), Server, null, false);
@@ -259,32 +256,6 @@ public sealed class SupportToolsServerApiClientTests
     }
 
     [Fact]
-    public async Task GetGitRepoByKey_GetsTheRepoOfTheEscapedKeyWithoutTheMessageHub()
-    {
-        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, GitRepoJson);
-
-        (Result<StsGitDataModel> result, string output) =
-            await CaptureConsole(() => CreateClient(handler).GetGitRepoByKey("Repo X/1"));
-
-        Assert.Equal(string.Empty, output);
-        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
-        Assert.Equal("/api/v1/git/gitrepo/Repo%20X%2F1", handler.LastRequestUri!.AbsolutePath);
-        Assert.Equal("RepoA", result.Value.GitProjectName);
-    }
-
-    [Fact]
-    public async Task GetGitRepoByKey_ReturnsGitWithKeyNotFound()
-    {
-        using var handler = new StubHttpMessageHandler(HttpStatusCode.NotFound, NotFoundProblemJson,
-            "application/problem+json");
-
-        Result<StsGitDataModel> result = await CreateClient(handler).GetGitRepoByKey("Repo X/1");
-
-        Assert.Equal("GitWithKeyNotFound", result.Error.Code);
-        Assert.Equal(ErrorType.NotFound, result.Error.Type);
-    }
-
-    [Fact]
     public async Task UpdateGitRepoByKey_PostsTheRecordToTheEscapedKeyWithoutTheMessageHub()
     {
         using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
@@ -382,20 +353,6 @@ public sealed class SupportToolsServerApiClientTests
             await CaptureConsole(async () => await CreateClient(handler).RemoveEditorConfigFileTypeName("React"));
 
         Assert.Equal("EditorConfigFileTypeWithNameNotFound", result.Error.Code);
-    }
-
-    [Fact]
-    public async Task GetGitIgnoreFileNames_GetsTheListRouteWithoutTheMessageHub()
-    {
-        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, """["CSharp","React"]""");
-
-        (Result<List<string>> result, string output) =
-            await CaptureConsole(() => CreateClient(handler).GetGitIgnoreFileNames());
-
-        Assert.Equal(string.Empty, output);
-        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
-        Assert.Equal("/api/v1/git/gitignorefiletypeslist", handler.LastRequestUri!.AbsolutePath);
-        Assert.Equal(["CSharp", "React"], result.Value);
     }
 
     [Fact]
@@ -996,8 +953,6 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("ftp://ftp.example.com/x/", result.Value[0].FileStoragePath);
         Assert.Equal("made-up-user", result.Value[0].UserName);
         Assert.Equal("made-up-password", result.Value[0].Password);
-        Assert.Equal(255, result.Value[0].FileNameMaxLength);
-        Assert.Equal(4, result.Value[0].FileSizeSplitPositionInRow);
         Assert.Equal(1, result.Value[0].FtpSiteLsFileOffset);
         Assert.Equal(3, result.Value[0].Version);
         Assert.Equal(@"D:\Bak", result.Value[1].FileStoragePath);
@@ -1030,8 +985,6 @@ public sealed class SupportToolsServerApiClientTests
             FileStoragePath = "ftp://ftp.example.com/x/",
             UserName = "made-up-user",
             Password = "made-up-password",
-            FileNameMaxLength = 255,
-            FileSizeSplitPositionInRow = 4,
             FtpSiteLsFileOffset = 1,
             Version = 3
         };
@@ -1048,8 +1001,6 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("ftp://ftp.example.com/x/", sent.FileStoragePath);
         Assert.Equal("made-up-user", sent.UserName);
         Assert.Equal("made-up-password", sent.Password);
-        Assert.Equal(255, sent.FileNameMaxLength);
-        Assert.Equal(4, sent.FileSizeSplitPositionInRow);
         Assert.Equal(1, sent.FtpSiteLsFileOffset);
         Assert.Equal(3, sent.Version);
     }
