@@ -307,6 +307,13 @@ public static class SupportToolsServerApiRoutes
         // GET api/v1/git/gitprojects
         public const string GitProjects = "/gitprojects";
 
+        // GET api/v1/git/gitremoteheads?names={name}&names={name}...
+        public const string GitRemoteHeads = "/gitremoteheads";
+
+        // POST api/v1/git/gitpushed/{key}
+        public const string GitPushedPrefix = "/gitpushed";
+        public const string GitPushed = GitPushedPrefix + "/{key}";
+
         //// GET api/v1/git/gitignorefilenames
         //public const string GitIgnoreFileNames = "/gitignorefilenames";
 

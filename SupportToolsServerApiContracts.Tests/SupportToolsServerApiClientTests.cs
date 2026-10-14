@@ -255,6 +255,84 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("Db", result.Error.Code);
     }
 
+    //A git whose remote could not be read has no branch and no commit, only the description of the error
+    [Fact]
+    public async Task GetGitRemoteHeads_GetsTheListWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
+            """[{"gitName":"RepoA","branchName":"main","commitId":"1dfa466db703de783bc9929e9bd765f2c870a1f2"},{"gitName":"RepoB","errorDescription":"Remote head of git RepoB cannot be read"}]""");
+
+        (Result<List<StsGitRemoteHeadDataModel>> result, string output) =
+            await CaptureConsole(() => CreateClient(handler).GetGitRemoteHeads());
+
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Get, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/git/gitremoteheads", handler.LastRequestUri!.AbsolutePath);
+        Assert.Equal(string.Empty, handler.LastRequestUri.Query);
+        Assert.Equal(2, result.Value.Count);
+        StsGitRemoteHeadDataModel repoA = result.Value[0];
+        Assert.Equal(("RepoA", "main", "1dfa466db703de783bc9929e9bd765f2c870a1f2", null),
+            (repoA.GitName, repoA.BranchName, repoA.CommitId, repoA.ErrorDescription));
+        StsGitRemoteHeadDataModel repoB = result.Value[1];
+        Assert.Equal(("RepoB", null, null, "Remote head of git RepoB cannot be read"),
+            (repoB.GitName, repoB.BranchName, repoB.CommitId, repoB.ErrorDescription));
+    }
+
+    //Every name is a value of its own, escaped like a route key; an empty list asks for every git
+    [Fact]
+    public async Task GetGitRemoteHeads_AsksOnlyForTheGivenNames()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, "[]");
+        SupportToolsServerApiClient client = CreateClient(handler);
+
+        await client.GetGitRemoteHeads(["Repo X/1", "a&b=c"]);
+        string namedQuery = handler.LastRequestUri!.Query;
+        await client.GetGitRemoteHeads([]);
+
+        Assert.Equal("?names=Repo%20X%2F1&names=a%26b%3Dc", namedQuery);
+        Assert.Equal(string.Empty, handler.LastRequestUri!.Query);
+    }
+
+    [Fact]
+    public async Task GetGitRemoteHeads_ReturnsTheErrorOfTheServer()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.InternalServerError,
+            """{"title":"Db","status":500,"detail":"Database failure"}""", "application/problem+json");
+
+        Result<List<StsGitRemoteHeadDataModel>> result = await CreateClient(handler).GetGitRemoteHeads();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Db", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task NotifyGitPushed_PostsTheEscapedKeyWithoutBodyAndWithoutTheMessageHub()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.OK, null);
+
+        (Result result, string output) =
+            await CaptureConsole(async () => await CreateClient(handler).NotifyGitPushed("Repo X/1"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(string.Empty, output);
+        Assert.Equal(HttpMethod.Post, handler.LastRequestMethod);
+        Assert.Equal("/api/v1/git/gitpushed/Repo%20X%2F1", handler.LastRequestUri!.AbsolutePath);
+        Assert.Null(handler.LastRequestBody);
+    }
+
+    [Fact]
+    public async Task NotifyGitPushed_ReturnsNotFoundOfTheServer()
+    {
+        using var handler = new StubHttpMessageHandler(HttpStatusCode.NotFound,
+            """{"title":"GitWithKeyNotFound","status":404,"detail":"Git With Key RepoZ Not Found"}""",
+            "application/problem+json");
+
+        Result result = await CreateClient(handler).NotifyGitPushed("RepoZ");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("GitWithKeyNotFound", result.Error.Code);
+    }
+
     [Fact]
     public async Task UpdateGitRepoByKey_PostsTheRecordToTheEscapedKeyWithoutTheMessageHub()
     {

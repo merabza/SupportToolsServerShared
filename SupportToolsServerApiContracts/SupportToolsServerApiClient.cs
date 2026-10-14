@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -583,6 +584,28 @@ public sealed class SupportToolsServerApiClient : ApiClient
         return GetAsyncReturn<List<StsGitProjectDataModel>>(
             $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitProjects}", false,
             cancellationToken);
+    }
+
+    //რეპოზიტორიების remote-ის მიმდინარე ვერსია, git-ის სახელით დალაგებული: gitNames-ის (ან, თუ ის ცარიელია, ყველა
+    //რეპოზიტორიის). სერვერი მას ქეშიდან აბრუნებს, ვადაგასულს კი git ls-remote-ით ამოწმებს. სერვერისთვის უცნობი სახელი
+    //შედეგში არ ჩანს
+    public Task<Result<List<StsGitRemoteHeadDataModel>>> GetGitRemoteHeads(IReadOnlyCollection<string>? gitNames = null,
+        CancellationToken cancellationToken = default)
+    {
+        string namesQuery = gitNames is null || gitNames.Count == 0
+            ? string.Empty
+            : $"?{string.Join('&', gitNames.Select(x => $"names={Uri.EscapeDataString(x)}"))}";
+        return GetAsyncReturn<List<StsGitRemoteHeadDataModel>>(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitRemoteHeads}{namesQuery}",
+            false, cancellationToken);
+    }
+
+    //push-ის შემდეგ: სერვერი რეპოზიტორიის ქეშირებულ ვერსიას აუქმებს და თავის კლონს ანახლებს
+    public async Task<Result> NotifyGitPushed(string gitKey, CancellationToken cancellationToken = default)
+    {
+        return await PostAsync(
+            $"{SupportToolsServerApiRoutes.Git.GitBase}{SupportToolsServerApiRoutes.Git.GitPushedPrefix}/{Uri.EscapeDataString(gitKey)}",
+            false, null, cancellationToken);
     }
 
     public async Task<Result> UpdateGitIgnoreFileType(string gitIgnoreFileTypeName,
