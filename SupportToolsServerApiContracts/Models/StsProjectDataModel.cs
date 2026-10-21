@@ -22,6 +22,7 @@ public sealed class StsProjectDataModel
     public int MajorVersion { get; set; }
     public int MinorVersion { get; set; }
     public bool UseAlternativeWebAgent { get; set; }
+    public bool UseLocalPackages { get; set; }
     public string? EditorConfigPatternName { get; set; }
     public string? MainProjectName { get; set; }
     public string? ApiContractsProjectName { get; set; }
