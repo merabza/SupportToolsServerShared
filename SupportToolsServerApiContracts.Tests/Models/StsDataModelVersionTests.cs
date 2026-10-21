@@ -563,6 +563,7 @@ public sealed class StsDataModelVersionTests
         Assert.Null(model.ProjectGroupName);
         Assert.Equal(0, model.MajorVersion);
         Assert.False(model.UseAlternativeWebAgent);
+        Assert.False(model.UseLocalPackages);
         Assert.Null(model.EditorConfigPatternName);
         Assert.Null(model.MainProjectName);
         Assert.Null(model.ProgramArchiveDateMask);
@@ -614,6 +615,7 @@ public sealed class StsDataModelVersionTests
             MajorVersion = 2,
             MinorVersion = 5,
             UseAlternativeWebAgent = true,
+            UseLocalPackages = true,
             EditorConfigPatternName = "default",
             MainProjectName = "AppA",
             ApiContractsProjectName = "AppAApiContracts",
