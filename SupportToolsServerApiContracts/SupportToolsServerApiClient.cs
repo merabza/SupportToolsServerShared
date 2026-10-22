@@ -592,7 +592,7 @@ public sealed class SupportToolsServerApiClient : ApiClient
     public Task<Result<List<StsGitRemoteHeadDataModel>>> GetGitRemoteHeads(IReadOnlyCollection<string>? gitNames = null,
         CancellationToken cancellationToken = default)
     {
-        string namesQuery = gitNames is null || gitNames.Count == 0
+        var namesQuery = gitNames is null || gitNames.Count == 0
             ? string.Empty
             : $"?{string.Join('&', gitNames.Select(x => $"names={Uri.EscapeDataString(x)}"))}";
         return GetAsyncReturn<List<StsGitRemoteHeadDataModel>>(
