@@ -12,7 +12,6 @@ namespace SupportToolsServerApiContracts.Models;
 public sealed class StsProjectCreatorSettingsDataModel
 {
     public int IndentSize { get; set; }
-    public string? FakeHostProjectName { get; set; }
     public string? ProjectsFolderPathReal { get; set; }
     public string? SecretsFolderPathReal { get; set; }
     public string? ProductionServerName { get; set; }

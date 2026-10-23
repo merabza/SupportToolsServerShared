@@ -1628,7 +1628,7 @@ public sealed class SupportToolsServerApiClientTests
     public async Task GetProjectCreatorSettings_GetsTheSingletonWithoutTheMessageHub()
     {
         using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
-            """{"indentSize":4,"fakeHostProjectName":"FakeHost","projectsFolderPathReal":"D:\\1WorkDotnet","secretsFolderPathReal":"D:\\1WorkSecurity","productionServerName":"dl360","productionEnvironmentName":"Prod","developerDbConnectionName":"Pazisi","databaseExchangeFileStorageName":"Backups","useSmartSchema":"Reduce","version":3}""");
+            """{"indentSize":4,"projectsFolderPathReal":"D:\\1WorkDotnet","secretsFolderPathReal":"D:\\1WorkSecurity","productionServerName":"dl360","productionEnvironmentName":"Prod","developerDbConnectionName":"Pazisi","databaseExchangeFileStorageName":"Backups","useSmartSchema":"Reduce","version":3}""");
 
         (Result<StsProjectCreatorSettingsDataModel> result, string output) =
             await CaptureConsole(() => CreateClient(handler).GetProjectCreatorSettings());
@@ -1638,7 +1638,6 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("/api/v1/settings/projectcreator", handler.LastRequestUri!.AbsolutePath);
         StsProjectCreatorSettingsDataModel projectCreatorSettings = result.Value;
         Assert.Equal(4, projectCreatorSettings.IndentSize);
-        Assert.Equal("FakeHost", projectCreatorSettings.FakeHostProjectName);
         Assert.Equal(@"D:\1WorkDotnet", projectCreatorSettings.ProjectsFolderPathReal);
         Assert.Equal(@"D:\1WorkSecurity", projectCreatorSettings.SecretsFolderPathReal);
         Assert.Equal("dl360", projectCreatorSettings.ProductionServerName);
@@ -1656,7 +1655,6 @@ public sealed class SupportToolsServerApiClientTests
         var projectCreatorSettings = new StsProjectCreatorSettingsDataModel
         {
             IndentSize = 4,
-            FakeHostProjectName = "FakeHost",
             ProjectsFolderPathReal = @"D:\1WorkDotnet",
             ProductionServerName = "dl360",
             UseSmartSchema = "Reduce",
@@ -1673,7 +1671,6 @@ public sealed class SupportToolsServerApiClientTests
         StsProjectCreatorSettingsDataModel sent =
             JsonConvert.DeserializeObject<StsProjectCreatorSettingsDataModel>(handler.LastRequestBody!)!;
         Assert.Equal(4, sent.IndentSize);
-        Assert.Equal("FakeHost", sent.FakeHostProjectName);
         Assert.Equal(@"D:\1WorkDotnet", sent.ProjectsFolderPathReal);
         Assert.Equal("dl360", sent.ProductionServerName);
         Assert.Equal("Reduce", sent.UseSmartSchema);
@@ -1689,12 +1686,12 @@ public sealed class SupportToolsServerApiClientTests
         (Result<int> result, string output) = await CaptureConsole(() => CreateConsoleClient(handler)
             .UpdateProjectCreatorSettings(new StsProjectCreatorSettingsDataModel
             {
-                FakeHostProjectName = "FakeHost", Version = 1
+                ProductionServerName = "dl360", Version = 1
             }));
 
         Assert.Equal("ConcurrencyConflict", result.Error.Code);
         Assert.Contains("request body was", output, StringComparison.Ordinal);
-        Assert.Contains("FakeHost", output, StringComparison.Ordinal);
+        Assert.Contains("dl360", output, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1814,7 +1811,7 @@ public sealed class SupportToolsServerApiClientTests
     public async Task GetProjects_GetsTheAggregatesWithTheVersionsWithoutTheMessageHub()
     {
         using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
-            """[{"name":"AppA","projectType":"IsService","editorConfigPatternName":"default","solutionFileName":"D:\\1WorkDotnet\\AppA\\AppA.slnx","keyGuidPart":"made-up-key","devDatabaseParameters":{"dbConnectionName":"Pc1.Sql","databaseName":"AppADev","commandTimeOut":120,"compress":true},"prodCopyDatabaseParameters":null,"gitProjectNames":["AppA","AppAShared"],"scaffoldSeederGitProjectNames":["AppADbPart"],"frontNpmPackageNames":["react-redux"],"redundantFileNames":["*.pdb"],"allowToolsList":["SeedData"],"endpoints":[{"name":"Upload","endpointRoute":"/upload","httpMethod":"Post","endpointType":"Command"}],"routeClasses":[{"name":"Git","root":"api","apiVersion":"v1","base":"/git"}],"serverInfos":[{"serverName":"PAZISI","environmentName":"Prod","webAgentNameForCheck":"PAZISI.WebAgent","serverSidePort":5022,"apiVersionId":"v1","appSettingsJsonSourceFileName":"D:\\1WorkSecurity\\AppA\\appsettings.json","serviceUserName":"merab","allowToolsList":["ProgramUpdater"],"currentDatabaseParameters":{"dbConnectionName":"PAZISI.Sql","databaseName":"AppA","commandTimeOut":300},"newDatabaseParameters":null}],"version":3},{"name":"AppB","projectType":"Standard","version":1}]""");
+            """[{"name":"AppA","projectType":"IsService","editorConfigPatternName":"default","solutionFileName":"D:\\1WorkDotnet\\AppA\\AppA.slnx","keyGuidPart":"made-up-key","devDatabaseParameters":{"dbConnectionName":"Pc1.Sql","databaseName":"AppADev","commandTimeOut":120,"compress":true},"prodCopyDatabaseParameters":null,"gitProjectNames":["AppA","AppAShared"],"frontNpmPackageNames":["react-redux"],"redundantFileNames":["*.pdb"],"allowToolsList":["SeedData"],"endpoints":[{"name":"Upload","endpointRoute":"/upload","httpMethod":"Post","endpointType":"Command"}],"routeClasses":[{"name":"Git","root":"api","apiVersion":"v1","base":"/git"}],"serverInfos":[{"serverName":"PAZISI","environmentName":"Prod","webAgentNameForCheck":"PAZISI.WebAgent","serverSidePort":5022,"apiVersionId":"v1","appSettingsJsonSourceFileName":"D:\\1WorkSecurity\\AppA\\appsettings.json","serviceUserName":"merab","allowToolsList":["ProgramUpdater"],"currentDatabaseParameters":{"dbConnectionName":"PAZISI.Sql","databaseName":"AppA","commandTimeOut":300},"newDatabaseParameters":null}],"version":3},{"name":"AppB","projectType":"Standard","version":1}]""");
 
         (Result<List<StsProjectDataModel>> result, string output) =
             await CaptureConsole(() => CreateClient(handler).GetProjects());
@@ -1834,7 +1831,6 @@ public sealed class SupportToolsServerApiClientTests
         Assert.True(first.DevDatabaseParameters.Compress);
         Assert.Null(first.ProdCopyDatabaseParameters);
         Assert.Equal(["AppA", "AppAShared"], first.GitProjectNames);
-        Assert.Equal(["AppADbPart"], first.ScaffoldSeederGitProjectNames);
         Assert.Equal(["react-redux"], first.FrontNpmPackageNames);
         Assert.Equal(["*.pdb"], first.RedundantFileNames);
         Assert.Equal(["SeedData"], first.AllowToolsList);

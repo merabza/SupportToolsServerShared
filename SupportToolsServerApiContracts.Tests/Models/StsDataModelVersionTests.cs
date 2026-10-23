@@ -450,7 +450,6 @@ public sealed class StsDataModelVersionTests
             """{"Templates":{"Console":{"SupportProjectType":0}}}""")!;
 
         Assert.Equal(0, model.IndentSize);
-        Assert.Null(model.FakeHostProjectName);
         Assert.Null(model.ProjectsFolderPathReal);
         Assert.Null(model.SecretsFolderPathReal);
         Assert.Null(model.ProductionServerName);
@@ -467,7 +466,6 @@ public sealed class StsDataModelVersionTests
         var model = new StsProjectCreatorSettingsDataModel
         {
             IndentSize = 4,
-            FakeHostProjectName = "FakeHost",
             ProjectsFolderPathReal = @"D:\1WorkDotnet",
             SecretsFolderPathReal = @"D:\1WorkSecurity",
             ProductionServerName = "dl360",
@@ -482,7 +480,6 @@ public sealed class StsDataModelVersionTests
             JsonConvert.SerializeObject(model))!;
 
         Assert.Equal(4, read.IndentSize);
-        Assert.Equal("FakeHost", read.FakeHostProjectName);
         Assert.Equal(@"D:\1WorkDotnet", read.ProjectsFolderPathReal);
         Assert.Equal(@"D:\1WorkSecurity", read.SecretsFolderPathReal);
         Assert.Equal("dl360", read.ProductionServerName);
@@ -572,7 +569,6 @@ public sealed class StsDataModelVersionTests
         Assert.Null(model.DevDatabaseParameters);
         Assert.Null(model.ProdCopyDatabaseParameters);
         Assert.Empty(model.GitProjectNames);
-        Assert.Empty(model.ScaffoldSeederGitProjectNames);
         Assert.Empty(model.FrontNpmPackageNames);
         Assert.Empty(model.RedundantFileNames);
         Assert.Empty(model.AllowToolsList);
@@ -621,10 +617,6 @@ public sealed class StsDataModelVersionTests
             ApiContractsProjectName = "AppAApiContracts",
             SpaProjectName = "appa.client",
             DbContextName = "AppADbContext",
-            ProjectShortPrefix = "aa",
-            ScaffoldSeederProjectName = "AppASeeder",
-            DbContextProjectName = "AppADb",
-            NewDataSeedingClassLibProjectName = "AppANewDataSeeding",
             ProgramArchiveDateMask = "yyyyMMddHHmmss",
             ProgramArchiveExtension = ".zip",
             ParametersFileDateMask = "yyyyMMdd",
@@ -636,13 +628,7 @@ public sealed class StsDataModelVersionTests
             MigrationProjectFilePath = @"D:\1WorkDotnet\AppA\Migration.csproj",
             DataSeederRulesByTableStartupProjectFilePath = @"D:\1WorkDotnet\AppA\Rules.csproj",
             OldDataConvertorForDataSeeder = @"D:\1WorkDotnet\AppA\Convertor.csproj",
-            SeedProjectFilePath = @"D:\1WorkDotnet\AppA\Seed.csproj",
-            SeedProjectParametersFilePath = @"D:\1WorkSecurity\AppA\Seed.json",
-            ExcludesRulesParametersFilePath = @"D:\1WorkSecurity\AppA\Excludes.json",
             AppSetEnKeysJsonFileName = @"D:\1WorkSecurity\AppA\Keys.json",
-            MigrationSqlFilesFolder = @"D:\1WorkDotnet\AppA\Sql",
-            PrepareProdCopyDatabaseProjectFilePath = @"D:\1WorkDotnet\AppA\Prepare.csproj",
-            PrepareProdCopyDatabaseProjectParametersFilePath = @"D:\1WorkSecurity\AppA\Prepare.json",
             PairedDbObjectsResultFileName = @"D:\1WorkSecurity\AppA\Paired.json",
             KeyGuidPart = "made-up-key-guid-part",
             DevDatabaseParameters = new StsDatabaseParametersDataModel
@@ -664,7 +650,6 @@ public sealed class StsDataModelVersionTests
                 BackupType = "Full"
             },
             GitProjectNames = ["AppA", "AppAShared"],
-            ScaffoldSeederGitProjectNames = ["AppADbPart"],
             FrontNpmPackageNames = ["react-redux", "@reduxjs/toolkit"],
             RedundantFileNames = ["*.pdb", "web.config"],
             AllowToolsList = ["SeedData", "GenerateApiRoutes"],

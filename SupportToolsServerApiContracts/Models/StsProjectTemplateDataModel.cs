@@ -1,7 +1,7 @@
 namespace SupportToolsServerApiContracts.Models;
 
 //პროექტის შაბლონი, კლიენტის AppProjectCreatorAllParameters.Templates-ის ჩანაწერი (TemplateModel). SupportProjectType
-//კლიენტის ESupportProjectType-ის სახელია (Console, Razor, Api, ScaffoldSeeder). ReactTemplateName React-ის შაბლონის
+//კლიენტის ESupportProjectType-ის სახელია (Console, Razor, Api). ReactTemplateName React-ის შაბლონის
 //(ReactAppTemplate) სახელია; null ან ცარიელი ნიშნავს, რომ შაბლონი არ არის, არარსებული სახელი კი 404
 //ReferencedRecordsNotFound-ია. ჩანაწერები სახელით ემთხვევა, რეგისტრის გარეშე. upsert-ში Version მოსალოდნელი ვერსიაა:
 //0 ნიშნავს ახალ ჩანაწერს, N კი განახლებას მხოლოდ მაშინ, თუ სერვერზე შენახული ვერსია N-ია
