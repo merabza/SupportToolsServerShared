@@ -9,6 +9,7 @@ namespace SupportToolsServerApiContracts.Models;
 //ნიშნავს, რომ მითითება არ არის. არარსებული სახელები 404 ReferencedRecordsNotFound-ია. ServerSidePort 0-დან 65535-მდეა,
 //0 ნიშნავს, რომ პორტი არ არის. AppSettings-ის ფაილები კანონიკური გზებია (README G3). AllowToolsList კლიენტის
 //EProjectServerTools-ის სახელებია: სიმრავლეა, ამიტომ სერვერი მას სახელით დალაგებულს აბრუნებს (OrdinalIgnoreCase).
+//OpenPort-ის ჩართვისას ინსტალაცია და საინსტალაციო სკრიპტი სერვისის Kestrel-ის პორტებს სერვერის firewall-ში ხსნის.
 //CurrentDatabaseParameters და NewDatabaseParameters null-ია, თუ ისინი არ არის
 public sealed class StsServerInfoDataModel
 {
@@ -20,6 +21,7 @@ public sealed class StsServerInfoDataModel
     public string? AppSettingsJsonSourceFileName { get; set; }
     public string? AppSettingsEncodedJsonFileName { get; set; }
     public string? ServiceUserName { get; set; }
+    public bool OpenPort { get; set; }
     public List<string> AllowToolsList { get; set; } = [];
     public StsDatabaseParametersDataModel? CurrentDatabaseParameters { get; set; }
     public StsDatabaseParametersDataModel? NewDatabaseParameters { get; set; }
