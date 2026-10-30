@@ -561,6 +561,7 @@ public sealed class StsDataModelVersionTests
         Assert.Equal(0, model.MajorVersion);
         Assert.False(model.UseAlternativeWebAgent);
         Assert.False(model.UseLocalPackages);
+        Assert.True(model.UsesDatabase);
         Assert.Null(model.EditorConfigPatternName);
         Assert.Null(model.MainProjectName);
         Assert.Null(model.ProgramArchiveDateMask);
@@ -612,6 +613,7 @@ public sealed class StsDataModelVersionTests
             MinorVersion = 5,
             UseAlternativeWebAgent = true,
             UseLocalPackages = true,
+            UsesDatabase = false,
             EditorConfigPatternName = "default",
             MainProjectName = "AppA",
             ApiContractsProjectName = "AppAApiContracts",
@@ -699,6 +701,7 @@ public sealed class StsDataModelVersionTests
         Assert.Equal(JsonConvert.SerializeObject(model), JsonConvert.SerializeObject(read));
         Assert.Equal("AppA", read.Name);
         Assert.Equal("IsService", read.ProjectType);
+        Assert.False(read.UsesDatabase);
         Assert.Equal(@"D:\1WorkDotnet\AppA\AppA.slnx", read.SolutionFileName);
         Assert.Equal("made-up-key-guid-part", read.KeyGuidPart);
         Assert.Equal("Pc1.Sql", read.DevDatabaseParameters!.DbConnectionName);
