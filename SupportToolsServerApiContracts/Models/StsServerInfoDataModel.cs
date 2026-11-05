@@ -10,6 +10,8 @@ namespace SupportToolsServerApiContracts.Models;
 //0 ნიშნავს, რომ პორტი არ არის. AppSettings-ის ფაილები კანონიკური გზებია (README G3). AllowToolsList კლიენტის
 //EProjectServerTools-ის სახელებია: სიმრავლეა, ამიტომ სერვერი მას სახელით დალაგებულს აბრუნებს (OrdinalIgnoreCase).
 //OpenPort-ის ჩართვისას ინსტალაცია და საინსტალაციო სკრიპტი სერვისის Kestrel-ის პორტებს სერვერის firewall-ში ხსნის.
+//SpaEnvMode Vite-ის mode-ია, რომლითაც პროექტის ამ სერვერზე გამოქვეყნებისას React ფრონტი იბილდება (dotnet publish
+///p:SpaMode=...); null ნიშნავს, რომ csproj-ის ნაგულისხმევი (production) მოქმედებს.
 //CurrentDatabaseParameters და NewDatabaseParameters null-ია, თუ ისინი არ არის
 public sealed class StsServerInfoDataModel
 {
@@ -22,6 +24,7 @@ public sealed class StsServerInfoDataModel
     public string? AppSettingsEncodedJsonFileName { get; set; }
     public string? ServiceUserName { get; set; }
     public bool OpenPort { get; set; }
+    public string? SpaEnvMode { get; set; }
     public List<string> AllowToolsList { get; set; } = [];
     public StsDatabaseParametersDataModel? CurrentDatabaseParameters { get; set; }
     public StsDatabaseParametersDataModel? NewDatabaseParameters { get; set; }
