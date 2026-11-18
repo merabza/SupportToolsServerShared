@@ -5,7 +5,8 @@ namespace SupportToolsServerApiContracts.Models;
 //მონაცემთა ბაზის სერვერთან კავშირი, SupportToolsParameters.DatabaseServerConnections-ის ჩანაწერი.
 //DatabaseServerProvider კლიენტის EDatabaseProvider-ის სახელია. DbWebAgentName ვებაგენტის ApiClient-ის სახელია; null ან
 //ცარიელი ნიშნავს, რომ ვებაგენტი არ არის, არარსებული სახელი კი 404 ReferencedRecordsNotFound-ია. ServerUser და ServerPass
-//საიდუმლოა: ღიად გადაიცემა, მაგრამ არსად იბეჭდება. folders set-ები კლიენტის dictionary-ის ჩანაწერებია, სერვერი მათ
+//საიდუმლოა: ღიად გადაიცემა, მაგრამ არსად იბეჭდება. DatabaseName არასავალდებულო ბაზის სახელია, რომელსაც კლიენტი
+//კავშირის ConnectionString-ში სვამს (null — ბაზის გარეშე). folders set-ები კლიენტის dictionary-ის ჩანაწერებია, სერვერი მათ
 //სახელით დალაგებულს აბრუნებს (OrdinalIgnoreCase). ჩანაწერები სახელით ემთხვევა, რეგისტრის გარეშე. upsert-ში Version
 //მოსალოდნელი ვერსიაა: 0 ნიშნავს ახალ ჩანაწერს, N კი განახლებას მხოლოდ მაშინ, თუ სერვერზე შენახული ვერსია N-ია.
 //განახლება მთელ ჩანაწერს ანაცვლებს, folders set-ების ჩათვლით
@@ -22,6 +23,7 @@ public sealed class StsDatabaseServerConnectionDataModel
     public bool TrustServerCertificate { get; set; }
     public int ConnectionTimeOut { get; set; }
     public bool Encrypt { get; set; }
+    public string? DatabaseName { get; set; }
     public List<StsDatabaseFoldersSetDataModel> DatabaseFoldersSets { get; set; } = [];
     public int Version { get; set; }
 }

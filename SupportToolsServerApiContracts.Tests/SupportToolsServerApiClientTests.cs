@@ -1252,7 +1252,7 @@ public sealed class SupportToolsServerApiClientTests
     public async Task GetDatabaseServerConnections_GetsTheListWithTheFoldersSetsAndTheVersionsWithoutTheMessageHub()
     {
         using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
-            """[{"name":"Pc1.Sql","databaseServerProvider":"WebAgent","dbWebAgentName":"Pc1.WebAgent","remoteDbConnectionName":"Main","serverAddress":"pc1","windowsNtIntegratedSecurity":true,"serverUser":"made-up-user","serverPass":"made-up-password","trustServerCertificate":true,"connectionTimeOut":30,"encrypt":true,"databaseFoldersSets":[{"name":"Default","backup":"D:\\Bak","data":"D:\\Data","dataLog":"D:\\Log"}],"version":3},{"name":"Pc2.Sql","databaseServerProvider":"SqlServer","databaseFoldersSets":[],"version":1}]""");
+            """[{"name":"Pc1.Sql","databaseServerProvider":"WebAgent","dbWebAgentName":"Pc1.WebAgent","remoteDbConnectionName":"Main","serverAddress":"pc1","windowsNtIntegratedSecurity":true,"serverUser":"made-up-user","serverPass":"made-up-password","trustServerCertificate":true,"connectionTimeOut":30,"encrypt":true,"databaseName":"AppDb","databaseFoldersSets":[{"name":"Default","backup":"D:\\Bak","data":"D:\\Data","dataLog":"D:\\Log"}],"version":3},{"name":"Pc2.Sql","databaseServerProvider":"SqlServer","databaseFoldersSets":[],"version":1}]""");
 
         (Result<List<StsDatabaseServerConnectionDataModel>> result, string output) =
             await CaptureConsole(() => CreateClient(handler).GetDatabaseServerConnections());
@@ -1272,6 +1272,7 @@ public sealed class SupportToolsServerApiClientTests
         Assert.True(first.TrustServerCertificate);
         Assert.Equal(30, first.ConnectionTimeOut);
         Assert.True(first.Encrypt);
+        Assert.Equal("AppDb", first.DatabaseName);
         StsDatabaseFoldersSetDataModel foldersSet = Assert.Single(first.DatabaseFoldersSets);
         Assert.Equal("Default", foldersSet.Name);
         Assert.Equal(@"D:\Bak", foldersSet.Backup);
@@ -1279,6 +1280,7 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal(@"D:\Log", foldersSet.DataLog);
         Assert.Equal(3, first.Version);
         Assert.Null(result.Value[1].DbWebAgentName);
+        Assert.Null(result.Value[1].DatabaseName);
         Assert.Empty(result.Value[1].DatabaseFoldersSets);
     }
 
@@ -1310,6 +1312,7 @@ public sealed class SupportToolsServerApiClientTests
             ServerUser = "made-up-user",
             ServerPass = "made-up-password",
             ConnectionTimeOut = 30,
+            DatabaseName = "AppDb",
             DatabaseFoldersSets = [new StsDatabaseFoldersSetDataModel { Name = "Default", Backup = @"D:\Bak" }],
             Version = 3
         };
@@ -1330,6 +1333,7 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("made-up-user", sent.ServerUser);
         Assert.Equal("made-up-password", sent.ServerPass);
         Assert.Equal(30, sent.ConnectionTimeOut);
+        Assert.Equal("AppDb", sent.DatabaseName);
         Assert.Equal(@"D:\Bak", Assert.Single(sent.DatabaseFoldersSets).Backup);
         Assert.Equal(3, sent.Version);
     }

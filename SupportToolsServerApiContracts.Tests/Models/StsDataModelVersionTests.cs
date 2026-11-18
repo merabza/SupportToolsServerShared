@@ -274,6 +274,7 @@ public sealed class StsDataModelVersionTests
         Assert.False(model.TrustServerCertificate);
         Assert.Equal(0, model.ConnectionTimeOut);
         Assert.False(model.Encrypt);
+        Assert.Null(model.DatabaseName);
         Assert.Empty(model.DatabaseFoldersSets);
         Assert.Equal(0, model.Version);
     }
@@ -294,6 +295,7 @@ public sealed class StsDataModelVersionTests
             TrustServerCertificate = true,
             ConnectionTimeOut = 30,
             Encrypt = true,
+            DatabaseName = "AppDb",
             DatabaseFoldersSets =
             [
                 new StsDatabaseFoldersSetDataModel
@@ -319,6 +321,7 @@ public sealed class StsDataModelVersionTests
         Assert.True(read.TrustServerCertificate);
         Assert.Equal(30, read.ConnectionTimeOut);
         Assert.True(read.Encrypt);
+        Assert.Equal("AppDb", read.DatabaseName);
         Assert.Equal(["Default", "Second"], read.DatabaseFoldersSets.Select(x => x.Name));
         Assert.Equal(@"D:\Bak", read.DatabaseFoldersSets[0].Backup);
         Assert.Equal(@"D:\Data", read.DatabaseFoldersSets[0].Data);
