@@ -344,6 +344,7 @@ public sealed class StsDataModelVersionTests
         Assert.Null(model.Runtime);
         Assert.Null(model.ServerSideDownloadFolder);
         Assert.Null(model.ServerSideDeployFolder);
+        Assert.False(model.IsDecommissioned);
         Assert.Equal(0, model.Version);
     }
 
@@ -360,6 +361,7 @@ public sealed class StsDataModelVersionTests
             Runtime = "linux-x64",
             ServerSideDownloadFolder = "/home/deployer/Download",
             ServerSideDeployFolder = "/opt/apps",
+            IsDecommissioned = true,
             Version = 7
         };
 
@@ -373,6 +375,7 @@ public sealed class StsDataModelVersionTests
         Assert.Equal("linux-x64", read.Runtime);
         Assert.Equal("/home/deployer/Download", read.ServerSideDownloadFolder);
         Assert.Equal("/opt/apps", read.ServerSideDeployFolder);
+        Assert.True(read.IsDecommissioned);
         Assert.Equal(7, read.Version);
     }
 

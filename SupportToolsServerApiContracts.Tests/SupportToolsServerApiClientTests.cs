@@ -1394,7 +1394,7 @@ public sealed class SupportToolsServerApiClientTests
     public async Task GetServers_GetsTheListWithTheVersionsWithoutTheMessageHub()
     {
         using var handler = new StubHttpMessageHandler(HttpStatusCode.OK,
-            """[{"name":"dl360","webAgentName":"Dl360.WebAgent","webAgentInstallerName":"Dl360.Installer","filesUserName":"deployer","filesUsersGroupName":"deployers","runtime":"linux-x64","serverSideDownloadFolder":"/home/deployer/Download","serverSideDeployFolder":"/opt/apps","version":3},{"name":"PAZISI","version":1}]""");
+            """[{"name":"dl360","webAgentName":"Dl360.WebAgent","webAgentInstallerName":"Dl360.Installer","filesUserName":"deployer","filesUsersGroupName":"deployers","runtime":"linux-x64","serverSideDownloadFolder":"/home/deployer/Download","serverSideDeployFolder":"/opt/apps","isDecommissioned":true,"version":3},{"name":"PAZISI","version":1}]""");
 
         (Result<List<StsServerDataModel>> result, string output) =
             await CaptureConsole(() => CreateClient(handler).GetServers());
@@ -1412,9 +1412,11 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("linux-x64", first.Runtime);
         Assert.Equal("/home/deployer/Download", first.ServerSideDownloadFolder);
         Assert.Equal("/opt/apps", first.ServerSideDeployFolder);
+        Assert.True(first.IsDecommissioned);
         Assert.Equal(3, first.Version);
         Assert.Null(result.Value[1].WebAgentName);
         Assert.Null(result.Value[1].Runtime);
+        Assert.False(result.Value[1].IsDecommissioned);
     }
 
     [Fact]
@@ -1447,6 +1449,7 @@ public sealed class SupportToolsServerApiClientTests
             Runtime = "linux-x64",
             ServerSideDownloadFolder = "/home/deployer/Download",
             ServerSideDeployFolder = "/opt/apps",
+            IsDecommissioned = true,
             Version = 3
         };
 
@@ -1466,6 +1469,7 @@ public sealed class SupportToolsServerApiClientTests
         Assert.Equal("linux-x64", sent.Runtime);
         Assert.Equal("/home/deployer/Download", sent.ServerSideDownloadFolder);
         Assert.Equal("/opt/apps", sent.ServerSideDeployFolder);
+        Assert.True(sent.IsDecommissioned);
         Assert.Equal(3, sent.Version);
     }
 
