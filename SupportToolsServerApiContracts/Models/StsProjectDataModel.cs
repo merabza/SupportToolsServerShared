@@ -27,8 +27,7 @@ public sealed class StsProjectDataModel
 
     //ნაგულისხმევად true-ა: UsesDatabase-ის არმცოდნე კლიენტის ჩანაწერი ბაზის გამოყენებას არ გამორთავს. DefaultValue
     //კლიენტის ჰეშს (DefaultValueHandling.Ignore) true-ს გამოატოვებინებს, ამიტომ ველის დამატება ძველ ჰეშებს არ ცვლის
-    [DefaultValue(true)]
-    public bool UsesDatabase { get; set; } = true;
+    [DefaultValue(true)] public bool UsesDatabase { get; set; } = true;
 
     public string? EditorConfigPatternName { get; set; }
     public string? MainProjectName { get; set; }
